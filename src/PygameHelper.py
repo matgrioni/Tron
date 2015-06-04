@@ -42,21 +42,19 @@ def PygameHelper:
         # defined callback. Each event has one possible callback
         # and if a callback is assigned to an event code which is
         # already assigned then the new will overwrite the old.
-        self.eventCallbacks = {};
+        self.eventCallbacks = {}
 
     # Adds a callback for the keyboard event code. All codes have one
     # unique callback. event should be a tuple where the first entry
     # is the key code, and the second entry is the event type.
-    def addEventCallback(self, event, callback) {
+    def addEventCallback(self, event, callback):
         self.eventCallbacks[event] = callback
-    }
 
     # Removes the callback for the provided event and returns the
     # previously added callback or None if there was none defined
     # for the event.
-    def removeEventCallback(self, event) {
-        return self.eventCallbacks(event, None);
-    }
+    def removeEventCallback(self, event):
+        return self.eventCallbacks(event, None)
 
     # The following functions _handleEvents, update, and draw, are
     # called once every loop iteration as seen in mainLoop.
