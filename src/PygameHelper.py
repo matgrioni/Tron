@@ -21,9 +21,10 @@
 # is being called for the events.
 ###########################################################
 
-import pygame
+import pygame, sys
+from pygame.locals import *
 
-def PygameHelper:
+class PygameHelper(object):
     def __init__(self, size=(640, 320), fill=(255, 255, 255)):
         pygame.init()
 
@@ -44,9 +45,15 @@ def PygameHelper:
         # already assigned then the new will overwrite the old.
         self.eventCallbacks = {}
 
+        self.addEventCallback((KEYDOWN, K_ESCAPE), self._quit);
+
     # Adds a callback for the keyboard event code. All codes have one
     # unique callback. event should be a tuple where the first entry
-    # is the key code, and the second entry is the event type.
+    # is the event type, and the second entry is the key code.
+    # The key code for KEYUP or KEYDOWN is event.key, for
+    # MOUSEBUTTONUP or MOUSEBUTTONDOWN its event.button, for
+    # MOUSEMOTION its event.buttons. The callback should be function
+    # with a parameter for an event.
     def addEventCallback(self, event, callback):
         self.eventCallbacks[event] = callback
 
@@ -65,7 +72,20 @@ def PygameHelper:
     #
     # To control event handlers use the callback access methods.
     def _handleEvents(self):
-        pass
+        for e in pygame.event.get():
+            if e.type == KEYUP or e.type == KEYDOWN:
+                info = (e.type, e.key)
+            elif e.type == MOUSEBUTTONDOWN or e.type == MOUSEBUTTONUP:
+                info = (e.type, e.button)
+            elif e.type == MOUSEMOTION:
+                info = (e.type, e.buttons)
+            else:
+                info = (None, None)
+
+            if info in self.eventCallbacks:
+                callback = self.eventCallbacks[info];
+                callback(e);
+                
 
     # Update the game state after one loop iteration. This helper class
     # does not implement this but a class that does implements the game
@@ -85,9 +105,14 @@ def PygameHelper:
 
         # Accept input and update the screen, 
         while self.running:
-            self._handlEvents();
+            self._handleEvents();
             self.update();
             self.draw();
             pygame.display.flip()
 
             self.clock.tick(self.fps)
+
+    def _quit(self, event):
+        self.running = False
+        pygame.quit()
+        sys.exit()
