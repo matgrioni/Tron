@@ -52,8 +52,10 @@ class PygameHelper(object):
     # is the event type, and the second entry is the key code.
     # The key code for KEYUP or KEYDOWN is event.key, for
     # MOUSEBUTTONUP or MOUSEBUTTONDOWN its event.button, for
-    # MOUSEMOTION its event.buttons. The callback should be function
-    # with a parameter for an event.
+    # MOUSEMOTION its event.buttons. For a callback to be defined
+    # only for the event type, the event param should only be
+    # (type, None). The callback should be function parameter
+    # for an event.
     def addEventCallback(self, event, callback):
         self.eventCallbacks[event] = callback
 
@@ -80,12 +82,19 @@ class PygameHelper(object):
             elif e.type == MOUSEMOTION:
                 info = (e.type, e.buttons)
             else:
+                # info has to be assigned to something so
+                # no error is thrown.
                 info = (None, None)
 
             if info in self.eventCallbacks:
-                callback = self.eventCallbacks[info];
-                callback(e);
-                
+                callback = self.eventCallbacks[info]
+                callback(e)
+
+            # Also check if the general callback for only the
+            # event type is defined.
+            if (e.type, None) in self.eventCallbacks:
+                callback = self.eventCallbacks[info]
+                callback(e)
 
     # Update the game state after one loop iteration. This helper class
     # does not implement this but a class that does implements the game
