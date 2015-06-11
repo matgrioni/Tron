@@ -25,7 +25,7 @@ import pygame, sys
 from pygame.locals import *
 
 class PygameHelper(object):
-    def __init__(self, size=(640, 320), fill=(255, 255, 255)):
+    def __init__(self, size=(640, 480), fill=(255, 255, 255)):
         pygame.init()
 
         # Create the screen based on the parameters
@@ -52,9 +52,17 @@ class PygameHelper(object):
     # is the event type, and the second entry is the key code.
     # The key code for KEYUP or KEYDOWN is event.key, for
     # MOUSEBUTTONUP or MOUSEBUTTONDOWN its event.button, for
-    # MOUSEMOTION its event.buttons. For a callback to be defined
-    # only for the event type, the event param should only be
-    # (type, None). The callback should be function parameter
+    # MOUSEMOTION its event.buttons.
+    #
+    # For a callback to be defined only for the event type, the
+    # event param should only be (type, None). A callback can be
+    # defined for multiple events too. For example, (KEYDOWN,
+    # (K_ESCAPE, K_UP)), will fire on KEYDOWN for the escape key
+    # and up arrow. If an event matches multiple callbacks the
+    # priority is single qualifier,  multiple qualifiers, general
+    # type.
+    #
+    # Lastly, the callback should have a function parameter 
     # for an event.
     def addEventCallback(self, event, callback):
         self.eventCallbacks[event] = callback
@@ -75,6 +83,7 @@ class PygameHelper(object):
     # To control event handlers use the callback access methods.
     def _handleEvents(self):
         for e in pygame.event.get():
+            # Determine the necessary event information.
             if e.type == KEYUP or e.type == KEYDOWN:
                 info = (e.type, e.key)
             elif e.type == MOUSEBUTTONDOWN or e.type == MOUSEBUTTONUP:
@@ -85,7 +94,13 @@ class PygameHelper(object):
                 # info has to be assigned to something so
                 # no error is thrown.
                 info = (None, None)
-
+            
+            # The progression of checks for the event is first
+            # for the general event, then for events with
+            # multiple qualifiers, then for a specific event
+            # with one type and one qualifier.
+            
+            # Check specifics first.
             if info in self.eventCallbacks:
                 callback = self.eventCallbacks[info]
                 callback(e)
@@ -95,6 +110,14 @@ class PygameHelper(object):
             if (e.type, None) in self.eventCallbacks:
                 callback = self.eventCallbacks[info]
                 callback(e)
+
+            # Then check for a callback linked to multiple events
+            # such as (KEYDOWN, (K_ESCAPE, K_UP))
+            for (key, _) in self.eventCallbacks.iteritems():
+                if type(key[1]) is tuple:
+                    if info[0] == key[0] and info[1] in key[1]:
+                        callback = self.eventCallbacks[key]
+                        callback(e)
 
     # Update the game state after one loop iteration. This helper class
     # does not implement this but a class that does implements the game

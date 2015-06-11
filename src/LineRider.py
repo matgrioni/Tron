@@ -17,8 +17,8 @@ import pygame
 # the each value is the scalar for movement in the
 # corresponding direction. Therefore TOP=(dx,dy)=(0,1) 
 class Direction(object):
-    TOP = (0, 1)
-    BOTTOM = (0, -1)
+    TOP = (0, -1)
+    BOTTOM = (0, 1)
     RIGHT = (1, 0)
     LEFT = (-1, 0)
 
@@ -57,3 +57,27 @@ class LineRider(object):
     def draw(self, screen):
         for b in self.blocks:
             pygame.draw.rect(screen, self.color, b, 0)
+
+    # Turns this LineRider left assuming the forward direction
+    # is the current direction of the LineRider.
+    def turnLeft(self):
+        if self.direction == Direction.TOP:
+            self.direction = Direction.LEFT
+        elif self.direction == Direction.BOTTOM:
+            self.direction = Direction.RIGHT
+        elif self.direction == Direction.RIGHT:
+            self.direction = Direction.TOP
+        elif self.direction == Direction.LEFT:
+            self.direction = Direction.BOTTOM
+
+    # Turns the LineRider right assuming we are facing the
+    # current direction.
+    def turnRight(self):
+        if self.direction == Direction.TOP:
+            self.direction = Direction.RIGHT
+        elif self.direction == Direction.BOTTOM:
+            self.direction = Direction.LEFT
+        elif self.direction == Direction.RIGHT:
+            self.direction = Direction.BOTTOM
+        elif self.direction == Direction.LEFT:
+            self.direction = Direction.TOP
