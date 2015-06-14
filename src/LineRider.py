@@ -15,7 +15,7 @@ import pygame
 # An enum implementation of the possible directions for the
 # line rider. The enum values are defined as a tuple, where
 # the each value is the scalar for movement in the
-# corresponding direction. Therefore TOP=(dx,dy)=(0,1) 
+# corresponding direction. Therefore TOP=(dx,dy)=(0,-1) 
 class Direction(object):
     TOP = (0, -1)
     BOTTOM = (0, 1)
@@ -35,8 +35,16 @@ class LineRider(object):
         self.direction = direction
         self.dim = dim
         self.color = color
+        self.turnable = True
 
         self.blocks = [(x, y, dim, dim)]
+
+    def collides(self, lineRider):
+        for block in lineRider.blocks:
+            if self.blocks[-1] == block:
+                return True
+
+        return False
 
     # Update the LineRider by adding a new Block to it in
     # the corresponding direction. 
@@ -61,23 +69,25 @@ class LineRider(object):
     # Turns this LineRider left assuming the forward direction
     # is the current direction of the LineRider.
     def turnLeft(self):
-        if self.direction == Direction.TOP:
-            self.direction = Direction.LEFT
-        elif self.direction == Direction.BOTTOM:
-            self.direction = Direction.RIGHT
-        elif self.direction == Direction.RIGHT:
-            self.direction = Direction.TOP
-        elif self.direction == Direction.LEFT:
-            self.direction = Direction.BOTTOM
+        if self.turnable:
+            if self.direction == Direction.TOP:
+                self.direction = Direction.LEFT
+            elif self.direction == Direction.BOTTOM:
+                self.direction = Direction.RIGHT
+            elif self.direction == Direction.RIGHT:
+                self.direction = Direction.TOP
+            elif self.direction == Direction.LEFT:
+                self.direction = Direction.BOTTOM
 
     # Turns the LineRider right assuming we are facing the
     # current direction.
     def turnRight(self):
-        if self.direction == Direction.TOP:
-            self.direction = Direction.RIGHT
-        elif self.direction == Direction.BOTTOM:
-            self.direction = Direction.LEFT
-        elif self.direction == Direction.RIGHT:
-            self.direction = Direction.BOTTOM
-        elif self.direction == Direction.LEFT:
-            self.direction = Direction.TOP
+        if self.turnable:
+            if self.direction == Direction.TOP:
+                self.direction = Direction.RIGHT
+            elif self.direction == Direction.BOTTOM:
+                self.direction = Direction.LEFT
+            elif self.direction == Direction.RIGHT:
+                self.direction = Direction.BOTTOM
+            elif self.direction == Direction.LEFT:
+                self.direction = Direction.TOP
