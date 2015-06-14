@@ -45,7 +45,7 @@ class PygameHelper(object):
         # already assigned then the new will overwrite the old.
         self.eventCallbacks = {}
 
-        self.addEventCallback((KEYDOWN, K_ESCAPE), self._quit);
+        self.addEventCallback((KEYDOWN, K_ESCAPE), self.quit);
 
     # Adds a callback for the keyboard event code. All codes have one
     # unique callback. event should be a tuple where the first entry
@@ -72,6 +72,9 @@ class PygameHelper(object):
     # for the event.
     def removeEventCallback(self, event):
         return self.eventCallbacks(event, None)
+
+    def clearEventCallbacks(self):
+        self.eventCallbacks.clear()
 
     # The following functions _handleEvents, update, and draw, are
     # called once every loop iteration as seen in mainLoop.
@@ -137,14 +140,14 @@ class PygameHelper(object):
 
         # Accept input and update the screen, 
         while self.running:
-            self._handleEvents();
-            self.update();
-            self.draw();
+            self._handleEvents()
+            self.update()
+            self.draw()
             pygame.display.flip()
 
             self.clock.tick(self.fps)
 
-    def _quit(self, event):
+    def quit(self, event):
         self.running = False
         pygame.quit()
         sys.exit()
