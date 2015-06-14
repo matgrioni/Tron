@@ -39,12 +39,31 @@ class LineRider(object):
 
         self.blocks = [(x, y, dim, dim)]
 
+    # Check if the current line rider collides with the
+    # provided one. Collision is if the head of this
+    # line rider intersects any block of the other.
     def collides(self, lineRider):
         for block in lineRider.blocks:
             if self.blocks[-1] == block:
                 return True
 
         return False
+
+    # Check if the line rider has overlapped itself.
+    def overlap(self):
+        for b in self.blocks:
+            if self.blocks.count(b) > 1:
+                return True
+
+        return False
+
+    # Check if the linerider is within the provided bounds.
+    # The bounds should be provided as (x, y, width, height)
+    def inbounds(self, bounds):
+        last = self.blocks[-1]
+
+        return last[0] >= bounds[0] and last[0] < bounds[0] + bounds[2] \
+               and last[1] >= bounds[1] and last[1] < bounds[1] + bounds[3]
 
     # Update the LineRider by adding a new Block to it in
     # the corresponding direction. 
