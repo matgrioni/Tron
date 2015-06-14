@@ -13,11 +13,17 @@ from pygame.locals import *
 from PygameHelper import PygameHelper
 from LineRider import Direction, LineRider
 
+# The current 
+class GameState(object):
+    PLAYING, PAUSE, GAMEOVER = range(3)
+
 class Game(PygameHelper):
     def __init__(self, size=(640, 480)):
         super(Game, self).__init__(size)
 
-        self.p1 = LineRider(10, size[1] / 2, Direction.RIGHT)
+        self.gameState = GameState.PLAYING
+
+        self.p1 = LineRider(10, size[1] / 2, Direction.RIGHT, color=(50, 200, 12))
         self.p2 = LineRider(size[0] - 15, size[1] / 2, Direction.LEFT)
 
         self.alive = {self.p1: 1, self.p2: 1}
@@ -31,18 +37,27 @@ class Game(PygameHelper):
 
     # Simply move each player along as needed
     def update(self):
-        self.p1.update()
-        self.p2.update()
+        if self.gameState == GameState.PLAYING:
+            self.p1.update()
+            self.p2.update()
 
-        self.alive[self.p1] = not self.p1.collides(self.p2)
-        self.alive[self.p2] = not self.p2.collides(self.p1)
+            bounds = (0, 0, self.size[0], self.size[1])
+
+            self.alive[self.p1] = not self.p1.collides(self.p2) and \
+                                      self.p1.inbounds(bounds) and \
+                                      not self.p1.overlap()
+            self.alive[self.p2] = not self.p2.collides(self.p1) and \
+                                      self.p2.inbounds(bounds) and \
+                                      not self.p2.overlap()
 
     def draw(self):
+        # Keep drawing the players so that the menu is more
+        # like a translucent overlay
         self.p1.draw(self.screen)
         self.p2.draw(self.screen)
 
         if self.alive[self.p1] == 0 or self.alive[self.p2] == 0:
-            self.quit()
+            self.gameState = GameState.GAMEOVER
 
     def _p1DirKeydown(self, event):
         if event.key == K_RIGHT:
@@ -67,4 +82,4 @@ class Game(PygameHelper):
 # If this is the main program, run the game at 60 fps
 if __name__ == "__main__":
     g = Game()
-    g.execute(45)
+    g.execute(50)
