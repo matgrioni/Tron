@@ -25,14 +25,18 @@ import pygame, sys
 from pygame.locals import *
 
 class PygameHelper(object):
-    def __init__(self, size=(640, 480), fill=(255, 255, 255)):
-        pygame.init()
+    def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
+        # If this is the root PygameHelper object must initialize
+        # pygame and create the screen. Otherwise take these objects
+        # from the provided parent.
+	    if parent == None:
+            pygame.init()
+            self.screen = pygame.display.set_mode(size)
+        else:
+            self.screen = parent.screen
 
-        # Create the screen based on the parameters
-        self.screen = pygame.display.set_mode(size)
         self.screen.fill(fill)
         pygame.display.flip()
-        self.size = size
 
         self.running = False
         self.clock = pygame.time.Clock()
@@ -45,7 +49,7 @@ class PygameHelper(object):
         # already assigned then the new will overwrite the old.
         self.eventCallbacks = {}
 
-        self.addEventCallback((KEYDOWN, K_ESCAPE), self.quit);
+        self.addEventCallback((KEYDOWN, K_ESCAPE), self.quit)
 
     # Adds a callback for the keyboard event code. All codes have one
     # unique callback. event should be a tuple where the first entry
@@ -147,7 +151,7 @@ class PygameHelper(object):
 
             self.clock.tick(self.fps)
 
-    def quit(self, event):
+    def quit(self):
         self.running = False
         pygame.quit()
         sys.exit()
