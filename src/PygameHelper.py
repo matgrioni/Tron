@@ -35,10 +35,9 @@ class PygameHelper(object):
             self.screen = pygame.display.set_mode(size)
         else:
             self.screen = parent.screen
+            self.size = (self.screen.get_width(), self.screen.get_height())
 
-        self.screen.fill(fill)
-        pygame.display.flip()
-
+        self.fill = fill
         self.running = False
         self.clock = pygame.time.Clock()
 
@@ -143,6 +142,9 @@ class PygameHelper(object):
         self.running = True
         self.fps = fps
 
+        self.screen.fill(self.fill)
+        pygame.display.flip()
+
         # Accept input and update the screen, 
         while self.running:
             self._handleEvents()
@@ -152,7 +154,5 @@ class PygameHelper(object):
 
             self.clock.tick(self.fps)
 
-    def quit(self):
+    def quit(self, e):
         self.running = False
-        pygame.quit()
-        sys.exit()

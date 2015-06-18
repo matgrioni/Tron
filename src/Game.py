@@ -18,8 +18,8 @@ class GameState(object):
     PLAYING, PAUSE, GAMEOVER = range(3)
 
 class Game(PygameHelper):
-    def __init__(self, size=(640, 480)):
-        super(Game, self).__init__(size, fill=(0, 0, 0))
+    def __init__(self, parent=None, size=(640, 480), fill=(0, 0, 0)):
+        super(Game, self).__init__(parent, size, fill)
 
         self.gameState = GameState.PLAYING
 

@@ -60,4 +60,4 @@ class Menu(PygameHelper):
         pass
 
     def _selectItem(self):
-        pass
+        self.optionCallbacks["Play"]()
