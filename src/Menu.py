@@ -21,7 +21,7 @@ class Menu(PygameHelper):
         self.selectedItem = 0
 
         # Create a list of surfaces for the provided options
-        self.font = pygame.font.SysFont("monospace", 20)
+        self.font = pygame.font.SysFont("monospace", 25)
         self.setOptions(options)
 
         self.optionCallbacks = {}
@@ -53,7 +53,6 @@ class Menu(PygameHelper):
     # Draw the text and the appropriate selector shape
     def draw(self):
         self.screen.fill(self.fill)
-        pygame.display.flip()
 
         for (i, option) in enumerate(self.renderedOptions):
             # Draw the menu items

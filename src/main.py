@@ -18,7 +18,8 @@ class MainMenu(Menu):
         super(MainMenu, self).__init__(options=options, size=size, fill=fill)
 
         g = Game(parent=self)
-        self.addOptionCallback("Play", g.execute)
+        self.addOptionCallback("Play", g.execute, 50)
+        self.addOptionCallback("Quit", self.quit)
 
 if __name__ == "__main__":
     menu = MainMenu()

@@ -29,6 +29,7 @@ class PygameHelper(object):
         # If this is the root PygameHelper object must initialize
         # pygame and create the screen. Otherwise take these objects
         # from the provided parent.
+        self.parent = parent
         if parent is None:
             pygame.init()
             self.size = size
@@ -50,6 +51,7 @@ class PygameHelper(object):
         self.eventCallbacks = {}
 
         self.addEventCallback((KEYDOWN, K_ESCAPE), self.quit)
+        self.addEventCallback((QUIT, None), self.quit)
 
     # Adds a callback for the keyboard event code. All codes have one
     # unique callback. event should be a tuple where the first entry
@@ -112,12 +114,6 @@ class PygameHelper(object):
                 callback = self.eventCallbacks[info]
                 callback(e)
 
-            # Also check if the general callback for only the
-            # event type is defined.
-            if (e.type, None) in self.eventCallbacks:
-                callback = self.eventCallbacks[info]
-                callback(e)
-
             # Then check for a callback linked to multiple events
             # such as (KEYDOWN, (K_ESCAPE, K_UP))
             for (key, _) in self.eventCallbacks.iteritems():
@@ -125,6 +121,12 @@ class PygameHelper(object):
                     if info[0] == key[0] and info[1] in key[1]:
                         callback = self.eventCallbacks[key]
                         callback(e)
+
+            # Also check if the general callback for only the
+            # event type is defined.
+            if (e.type, None) in self.eventCallbacks:
+                callback = self.eventCallbacks[(e.type, None)]
+                callback(e)
 
     # Update the game state after one loop iteration. This helper class
     # does not implement this but a class that does implements the game
@@ -154,5 +156,8 @@ class PygameHelper(object):
 
             self.clock.tick(self.fps)
 
-    def quit(self, e):
+    def quit(self, e=None):
         self.running = False
+        if self.parent is None:
+            pygame.quit()
+            sys.exit()
