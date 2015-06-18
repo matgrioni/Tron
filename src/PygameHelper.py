@@ -156,8 +156,11 @@ class PygameHelper(object):
 
             self.clock.tick(self.fps)
 
+    # Used to quit the entire application or the single module
+    # of PygameHelper running. Quitting is not always associated
+    # with an event so it can be a default of None.
     def quit(self, e=None):
         self.running = False
-        if self.parent is None:
+        if self.parent is None or e.type == QUIT:
             pygame.quit()
             sys.exit()
