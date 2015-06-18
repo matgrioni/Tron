@@ -11,10 +11,11 @@
 ###########################################################
 
 import pygame
+from pygame.locals import *
 from PygameHelper import PygameHelper
 
 class Menu(PygameHelper):
-    def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255), options):
+    def __init__(self, options, parent=None, size=(640, 480), fill=(255, 255, 255)):
         super(Menu, self).__init__(parent, size, fill)
 
         # Create a list of surfaces for the provided options
@@ -26,7 +27,7 @@ class Menu(PygameHelper):
         # Define the default keyboard events for menu navigation
         self.addEventCallback((KEYDOWN, K_UP), self._moveSelectedUp)
         self.addEventCallback((KEYDOWN, K_DOWN), self._moveSelectedDown)
-        self.addEventCallback((KEYDOWN, K_ENTER), self._selectItem)
+        self.addEventCallback((KEYDOWN, K_RETURN), self._selectItem)
 
     # Option callbacks are called when the user selects an
     # option from the menu with the enter key. Provide
@@ -48,6 +49,15 @@ class Menu(PygameHelper):
     # Draw the text
     def draw(self):
         for (i, option) in enumerate(self.renderedOptions):
-            x = size[0] / 2 - option.width / 2
-            y = 100 + i * option.height
+            x = self.size[0] / 2 - option.get_width() / 2
+            y = 100 + i * option.get_height()
             self.screen.blit(option, (x, y))
+
+    def _moveSelectedUp(self):
+        pass
+
+    def _moveSelectedDown(self):
+        pass
+
+    def _selectItem(self):
+        pass

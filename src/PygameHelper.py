@@ -29,8 +29,9 @@ class PygameHelper(object):
         # If this is the root PygameHelper object must initialize
         # pygame and create the screen. Otherwise take these objects
         # from the provided parent.
-	    if parent == None:
+        if parent is None:
             pygame.init()
+            self.size = size
             self.screen = pygame.display.set_mode(size)
         else:
             self.screen = parent.screen

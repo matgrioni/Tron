@@ -14,7 +14,7 @@ from Menu import Menu
 class MainMenu(Menu):
     def __init__(self, size=(640, 480), fill=(255, 255, 255)):
         options = ["Play", "Settings", "Quit"]
-        super(MainMenu, self).__init__(size=size, fill=fill, options)
+        super(MainMenu, self).__init__(options=options, size=size, fill=fill)
 
 if __name__ == "__main__":
     menu = MainMenu()
