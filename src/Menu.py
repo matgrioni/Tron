@@ -34,9 +34,10 @@ class Menu(PygameHelper):
     # Option callbacks are called when the user selects an
     # option from the menu with the enter key. Provide
     # the option name and the method to be run when the
-    # item is selected.
-    def addOptionCallback(self, option, callback):
-        self.optionCallbacks[option] = callback
+    # item is selected. Provide any parameters to the
+    # callback through the optional args argument
+    def addOptionCallback(self, option, callback, *args):
+        self.optionCallbacks[option] = (callback, args)
 
     # Remove the current 
     def removeOptionCallback(self, option):
@@ -83,4 +84,7 @@ class Menu(PygameHelper):
         option = self.options[self.selectedItem]
 
         if option in self.optionCallbacks:
-            callback = self.optionCallbacks[option]
+            callback = self.optionCallbacks[option][0]
+            args = self.optionCallbacks[option][1]
+
+            callback(*args)
