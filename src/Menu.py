@@ -21,7 +21,7 @@ class Menu(PygameHelper):
         self.selectedItem = 0
 
         # Create a list of surfaces for the provided options
-        self.font = pygame.font.SysFont("monospace", 25)
+        self.font = pygame.font.SysFont("monospace", 20)
         self.setOptions(options)
 
         self.optionCallbacks = {}
@@ -36,8 +36,8 @@ class Menu(PygameHelper):
     # the option name and the method to be run when the
     # item is selected. Provide any parameters to the
     # callback through the optional args argument
-    def addOptionCallback(self, option, callback, *args):
-        self.optionCallbacks[option] = (callback, args)
+    def addOptionCallback(self, option, callback, *args, **kwargs):
+        self.optionCallbacks[option] = (callback, args, kwargs)
 
     # Remove the current 
     def removeOptionCallback(self, option):
@@ -85,5 +85,6 @@ class Menu(PygameHelper):
         if option in self.optionCallbacks:
             callback = self.optionCallbacks[option][0]
             args = self.optionCallbacks[option][1]
+            kwargs = self.optionCallbacks[option][2]
 
-            callback(*args)
+            callback(*args, **kwargs)

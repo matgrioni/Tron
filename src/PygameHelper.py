@@ -29,7 +29,6 @@ class PygameHelper(object):
         # If this is the root PygameHelper object must initialize
         # pygame and create the screen. Otherwise take these objects
         # from the provided parent.
-        self.parent = parent
         if parent is None:
             pygame.init()
             self.size = size
@@ -38,6 +37,7 @@ class PygameHelper(object):
             self.screen = parent.screen
             self.size = (self.screen.get_width(), self.screen.get_height())
 
+        self.parent = parent
         self.fill = fill
         self.running = False
         self.clock = pygame.time.Clock()
@@ -50,7 +50,7 @@ class PygameHelper(object):
         # already assigned then the new will overwrite the old.
         self.eventCallbacks = {}
 
-        self.addEventCallback((KEYDOWN, K_ESCAPE), self.quit)
+        self.addEventCallback((KEYDOWN, K_ESCAPE), self.back)
         self.addEventCallback((QUIT, None), self.quit)
 
     # Adds a callback for the keyboard event code. All codes have one
@@ -156,11 +156,32 @@ class PygameHelper(object):
 
             self.clock.tick(self.fps)
 
-    # Used to quit the entire application or the single module
-    # of PygameHelper running. Quitting is not always associated
-    # with an event so it can be a default of None.
+        # For when the loop is over, if it's transitioning
+        # to a new screen we want to clear it before then
+        self.screen.fill(self.fill)
+        pygame.display.flip()
+
+    # Moves up through the module stack back times. If the
+    # current module is the root, quit the app. 
+    def back(self, e=None, count=1):
+        if count > 0:
+            if self.parent is None:
+                self.quit(e)
+            else:
+                # If the parent has a different fill color
+                # then change the screen to that fill color
+                self.fill = self.parent.fill
+                self.running = False
+
+                count -= 1
+                self.parent.back(e, count)
+
+
+    # Used specifically for quitting the entire application.
+    # e can be None since quitting the application doesn't
+    # have to be associated with a certain event. For example
+    # a menu option could quit the application.
     def quit(self, e=None):
         self.running = False
-        if self.parent is None or e.type == QUIT:
-            pygame.quit()
-            sys.exit()
+        pygame.quit()
+        sys.exit()

@@ -12,13 +12,14 @@
 from pygame.locals import *
 from PygameHelper import PygameHelper
 from LineRider import Direction, LineRider
+from PauseMenu import PauseMenu
 
-# The current 
+# The current state of the game as an enum
 class GameState(object):
     PLAYING, PAUSE, GAMEOVER = range(3)
 
 class Game(PygameHelper):
-    def __init__(self, parent=None, size=(640, 480), fill=(0, 0, 0)):
+    def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
         super(Game, self).__init__(parent, size, fill)
 
         self.gameState = GameState.PLAYING
@@ -26,7 +27,7 @@ class Game(PygameHelper):
         self.p1 = LineRider(10, size[1] / 2, Direction.RIGHT, color=(50, 200, 12))
         self.p2 = LineRider(size[0] - 15, size[1] / 2, Direction.LEFT)
 
-        self.alive = {self.p1: 1, self.p2: 1}
+        self.alive = {self.p1: True, self.p2: True}
 
         # Add callbacks for moving the players.
         self.addEventCallback((KEYDOWN, (K_RIGHT, K_LEFT)), self._p1DirKeydown)
@@ -34,6 +35,8 @@ class Game(PygameHelper):
 
         self.addEventCallback((KEYDOWN, (K_a, K_d)), self._p2DirKeydown)
         self.addEventCallback((KEYUP, (K_a, K_d)), self._p2DirKeyup)
+
+        self.addEventCallback((KEYDOWN, K_SPACE), self._pauseMenu)
 
     # Simply move each player along as needed
     def update(self):
@@ -50,14 +53,14 @@ class Game(PygameHelper):
                                       self.p2.inbounds(bounds) and \
                                       not self.p2.overlap()
 
+        if False in self.alive.values():
+            self.gameState = GameState.GAMEOVER
+
     def draw(self):
         # Keep drawing the players so that the menu is more
         # like a translucent overlay
         self.p1.draw(self.screen)
         self.p2.draw(self.screen)
-
-        if self.alive[self.p1] == 0 or self.alive[self.p2] == 0:
-            self.gameState = GameState.GAMEOVER
 
     def _p1DirKeydown(self, event):
         if event.key == K_RIGHT:
@@ -78,3 +81,7 @@ class Game(PygameHelper):
 
     def _p2DirKeyup(self, event):
         self.p2.turnable = True
+
+    def _pauseMenu(self, event):
+        pauseMenu = PauseMenu(self)
+        pauseMenu.execute(50)
