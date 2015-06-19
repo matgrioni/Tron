@@ -32,12 +32,20 @@ class LineRider(object):
     # height of the blocks that make up the LineRider.
     def __init__(self, x, y, direction, dim=5, color=(100, 100, 100)):
         self.x, self.y = x, y
-        self.direction = direction
+        self.direction = self.fDirection = direction
         self.dim = dim
         self.color = color
         self.turnable = True
 
         self.blocks = [(x, y, dim, dim)]
+
+    def reset(self):
+        first = self.blocks[0]
+        self.x, self.y = first[0], first[1]
+        self.direction = self.fDirection
+        self.turnable = True
+
+        del self.blocks[1:]
 
     # Check if the current line rider collides with the
     # provided one. Collision is if the head of this

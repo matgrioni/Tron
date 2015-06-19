@@ -38,6 +38,12 @@ class Game(PygameHelper):
 
         self.addEventCallback((KEYDOWN, K_SPACE), self._pauseMenu)
 
+    def reset(self):
+        self.p1.reset()
+        self.p2.reset()
+
+        self.alive[self.p1] = self.alive[self.p2] = True
+
     # Simply move each player along as needed
     def update(self):
         if self.gameState == GameState.PLAYING:
