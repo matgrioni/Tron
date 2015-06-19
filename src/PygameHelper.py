@@ -53,6 +53,12 @@ class PygameHelper(object):
         self.addEventCallback((KEYDOWN, K_ESCAPE), self.back)
         self.addEventCallback((QUIT, None), self.quit)
 
+    # Similar to init except it keeps all the callbacks the same.
+    # Equivalent to the state of the module before update was ever
+    # called.
+    def reset(self):
+        pass
+
     # Adds a callback for the keyboard event code. All codes have one
     # unique callback. event should be a tuple where the first entry
     # is the event type, and the second entry is the key code.
