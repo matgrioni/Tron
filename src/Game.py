@@ -43,6 +43,7 @@ class Game(PygameHelper):
         self.p2.reset()
 
         self.alive[self.p1] = self.alive[self.p2] = True
+        self.gameState = GameState.PLAYING
 
     # Simply move each player along as needed
     def update(self):
