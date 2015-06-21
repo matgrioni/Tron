@@ -23,7 +23,7 @@ class MainMenu(Menu):
 
     def _startGame(self):
         g = Game(parent=self)
-        g.execute(50)
+        g.execute(self.fps)
 
 if __name__ == "__main__":
     menu = MainMenu()
