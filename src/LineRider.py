@@ -45,7 +45,7 @@ class LineRider(Player):
     # Reset the LineRider to the state it was in after being created
     # As if update was never called.
     def reset(self):
-        super(LineRider, self).reset()
+        self.alive = self.fAlive
 
         first = self.blocks[0]
         self.x, self.y = first[0], first[1]

@@ -167,6 +167,9 @@ class PygameHelper(object):
         self.screen.fill(self.fill)
         pygame.display.flip()
 
+    def title(self, s):
+        pygame.display.set_caption(s)
+
     # Moves up through the module stack back times. If the
     # current module is the root, quit the app. 
     def back(self, e=None, count=1):
@@ -181,7 +184,6 @@ class PygameHelper(object):
 
                 count -= 1
                 self.parent.back(e, count)
-
 
     # Used specifically for quitting the entire application.
     # e can be None since quitting the application doesn't

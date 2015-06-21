@@ -47,7 +47,8 @@ class Menu(PygameHelper):
     # than setting self.options automatically.
     def setOptions(self, options):
         self.options = options
-        self.renderedOptions = [self.font.render(option, False, (0, 0, 0)) for option in options]
+        self.renderedOptions = [self.font.render(option, False, (0, 0, 0)) \
+                                for option in options]
         self.maxWidth = max([o.get_width() for o in self.renderedOptions])
 
     # Draw the text and the appropriate selector shape
@@ -61,11 +62,13 @@ class Menu(PygameHelper):
             self.screen.blit(option, (x, y))
 
             if i == self.selectedItem:
-                sidePoint = ((self.size[0] - self.maxWidth) / 2 - 20, y + option.get_height() / 2)
+                sidePoint = ((self.size[0] - self.maxWidth) / 2 - 20,
+                             y + option.get_height() / 2)
                 topPoint = (sidePoint[0] - 10, sidePoint[1] - 5)
                 botPoint = (sidePoint[0] - 10, sidePoint[1] + 5)
 
-                pygame.draw.polygon(self.screen, (0, 0, 0), [sidePoint, topPoint, botPoint])
+                pygame.draw.polygon(self.screen, (0, 0, 0),
+                                    [sidePoint, topPoint, botPoint])
 
     # Changes the selected item to one higher if possible
     def _moveSelectedUp(self, event):

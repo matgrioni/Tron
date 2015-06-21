@@ -27,4 +27,5 @@ class MainMenu(Menu):
 
 if __name__ == "__main__":
     menu = MainMenu()
+    menu.title("Tron")
     menu.execute(50)

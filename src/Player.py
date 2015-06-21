@@ -16,8 +16,7 @@ class Player(object):
         self.alive = self.fAlive = alive
 
     def reset(self):
-        self.score = self.fScore
-        self.alive = self.fAlive
+        pass
 
     def checkAlive(self, *args):
         pass
