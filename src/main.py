@@ -15,10 +15,10 @@ from Game import Game
 class MainMenu(Menu):
     def __init__(self, size=(640, 480), fill=(255, 255, 255)):
         # No parent, this is the parent PygameHelper module
-        options = ["Play", "Settings", "Quit"]
+        options = ["Local", "Network", "Settings", "Quit"]
         super(MainMenu, self).__init__(options=options, size=size, fill=fill)
 
-        self.addOptionCallback("Play", self._startGame)
+        self.addOptionCallback("Local", self._startGame)
         self.addOptionCallback("Quit", self.quit)
 
     def _startGame(self):
