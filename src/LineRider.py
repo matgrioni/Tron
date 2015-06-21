@@ -11,6 +11,7 @@
 ##########################################################
 
 import pygame
+from Player import Player
 
 # An enum implementation of the possible directions for the
 # line rider. The enum values are defined as a tuple, where
@@ -25,12 +26,14 @@ class Direction(object):
 # A LineRider is essentially the line created by the
 # players during the game. It is made of multiple
 # square blocks that are tuples of the form (x, y, w, h).
-class LineRider(object):
+class LineRider(Player):
     # Define the starting position, color, direction, size
     # of the LineRider. The direction should be a value
     # from Direction defined above. dim is the width and
     # height of the blocks that make up the LineRider.
     def __init__(self, x, y, direction, dim=5, color=(100, 100, 100)):
+        super(LineRider, self).__init__()
+
         self.x, self.y = x, y
         self.direction = self.fDirection = direction
         self.dim = dim
@@ -39,7 +42,11 @@ class LineRider(object):
 
         self.blocks = [(x, y, dim, dim)]
 
+    # Reset the LineRider to the state it was in after being created
+    # As if update was never called.
     def reset(self):
+        super(LineRider, self).reset()
+
         first = self.blocks[0]
         self.x, self.y = first[0], first[1]
         self.direction = self.fDirection
@@ -47,10 +54,16 @@ class LineRider(object):
 
         del self.blocks[1:]
 
+    def checkAlive(self, player, bounds):
+        self.alive = not self._collides(player) and self._inbounds(bounds) \
+                     and not self._overlap()
+
+        return self.alive
+
     # Check if the current line rider collides with the
     # provided one. Collision is if the head of this
     # line rider intersects any block of the other.
-    def collides(self, lineRider):
+    def _collides(self, lineRider):
         for block in lineRider.blocks:
             if self.blocks[-1] == block:
                 return True
@@ -58,7 +71,7 @@ class LineRider(object):
         return False
 
     # Check if the line rider has overlapped itself.
-    def overlap(self):
+    def _overlap(self):
         for b in self.blocks:
             if self.blocks.count(b) > 1:
                 return True
@@ -67,7 +80,7 @@ class LineRider(object):
 
     # Check if the linerider is within the provided bounds.
     # The bounds should be provided as (x, y, width, height)
-    def inbounds(self, bounds):
+    def _inbounds(self, bounds):
         last = self.blocks[-1]
 
         return last[0] >= bounds[0] and last[0] < bounds[0] + bounds[2] \
