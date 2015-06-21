@@ -12,35 +12,23 @@
 import pygame
 
 from pygame.locals import *
-from PygameHelper import PygameHelper
+from PygameHelper import PygameHelper, TextDisp
 from LineRider import Direction, LineRider
 from PauseMenu import PauseMenu
 from GameOverMenu import GameOverMenu
 
 # The current state of the game as an enum
 class GameState(object):
-    PLAYING, PAUSE, GAMEOVER = range(3)
-
-# Class to display the current score for each players
-class TextDisp(object):
-    def __init__(self, x, y, text=0):
-        self.x, self.y = x, y
-        self.width, self.height = 0, 0
-        self.text = text
-
-        self.font = pygame.font.SysFont("monospace", 20)
-
-    def draw(self, screen):
-        surface = self.font.render(self.text, False, (0, 0, 0))
-        #self.width, self.height = surface.get_width(), surface.get_height()
-
-        screen.blit(surface, (self.x, self.y))
+    PLAYING, PAUSE, GAMEOVER, TIMER = range(4)
 
 class Game(PygameHelper):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
         super(Game, self).__init__(parent, size, fill)
 
-        self.gameState = GameState.PLAYING
+        self.gameState = GameState.TIMER
+        self.timer = 4
+        self.millis = 1000
+        self.timerDisp = TextDisp(size[0] / 2, size[1] / 2, "3")
 
         self.p1 = LineRider(10, size[1] / 2, Direction.RIGHT, color=(50, 200, 12))
         self.p2 = LineRider(size[0] - 15, size[1] / 2, Direction.LEFT)
@@ -61,11 +49,23 @@ class Game(PygameHelper):
         self.p1.reset()
         self.p2.reset()
 
-        self.gameState = GameState.PLAYING
+        self.resetTimer()
+
+    def resetTimer(self):
+        self.gameState = GameState.TIMER
+        self.timer = 4
+        self.millis = 1000
+        self.timerDisp.text = str(self.timer)
 
     # Simply move each player along as needed
     def update(self):
-        if self.gameState == GameState.PLAYING:
+        if self.gameState == GameState.TIMER:
+            self.timer -= 1
+            self.timerDisp.text = str(self.timer)
+            if self.timer == 0:
+                self.gameState = GameState.PLAYING
+                self.millis = 0
+        elif self.gameState == GameState.PLAYING:
             self.p1.update()
             self.p2.update()
 
@@ -90,6 +90,8 @@ class Game(PygameHelper):
                 gameOver.execute(self.fps)
 
     def draw(self):
+        self.screen.fill(self.fill)
+
         self.p1Score.draw(self.screen)
         self.p2Score.draw(self.screen)
 
@@ -97,6 +99,9 @@ class Game(PygameHelper):
         # like a translucent overlay
         self.p1.draw(self.screen)
         self.p2.draw(self.screen)
+
+        if self.gameState == GameState.TIMER:
+            self.timerDisp.draw(self.screen)
 
     # Methods to control the movement of the players based
     # on the respective binded key presses.
@@ -123,5 +128,6 @@ class Game(PygameHelper):
     # Create the pause menu with the current game screen as
     # the parent.
     def _pauseMenu(self, event):
-        pauseMenu = PauseMenu(self, fill=(255, 255, 255))
+        pauseMenu = PauseMenu([self.p1.score, self.p2.score], self,
+                              fill=(255, 255, 255))
         pauseMenu.execute(self.fps)

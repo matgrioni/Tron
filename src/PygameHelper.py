@@ -24,6 +24,18 @@
 import pygame, sys
 from pygame.locals import *
 
+# Class to easily display any text anywhere on a pygame screen
+class TextDisp(object):
+    def __init__(self, x, y, text="", font="monospace", fontsize=20):
+        self.x, self.y = x, y
+        self.text = text
+
+        self.font = pygame.font.SysFont(font, fontsize)
+
+    def draw(self, screen):
+        surface = self.font.render(self.text, False, (0, 0, 0))
+        screen.blit(surface, (self.x, self.y))
+
 class PygameHelper(object):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
         # If this is the root PygameHelper object must initialize
@@ -42,6 +54,7 @@ class PygameHelper(object):
         self.running = False
         self.clock = pygame.time.Clock()
 
+        self.millis = 0
         self.fps = 0
 
         # Create the dictionaries that bind an event to a user
@@ -161,11 +174,15 @@ class PygameHelper(object):
             pygame.display.flip()
 
             self.clock.tick(self.fps)
+            self.wait()
 
         # For when the loop is over, if it's transitioning
         # to a new screen we want to clear it before then
         self.screen.fill(self.fill)
         pygame.display.flip()
+
+    def wait(self):
+        pygame.time.delay(self.millis)
 
     def title(self, s):
         pygame.display.set_caption(s)
