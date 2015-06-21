@@ -27,8 +27,6 @@ class Game(PygameHelper):
         self.p1 = LineRider(10, size[1] / 2, Direction.RIGHT, color=(50, 200, 12))
         self.p2 = LineRider(size[0] - 15, size[1] / 2, Direction.LEFT)
 
-        self.alive = {self.p1: True, self.p2: True}
-
         # Add callbacks for moving the players.
         self.addEventCallback((KEYDOWN, (K_RIGHT, K_LEFT)), self._p1DirKeydown)
         self.addEventCallback((KEYUP, (K_RIGHT, K_LEFT)), self._p1DirKeyup)
@@ -42,7 +40,6 @@ class Game(PygameHelper):
         self.p1.reset()
         self.p2.reset()
 
-        self.alive[self.p1] = self.alive[self.p2] = True
         self.gameState = GameState.PLAYING
 
     # Simply move each player along as needed
@@ -53,15 +50,13 @@ class Game(PygameHelper):
 
             bounds = (0, 0, self.size[0], self.size[1])
 
-            self.alive[self.p1] = not self.p1.collides(self.p2) and \
-                                      self.p1.inbounds(bounds) and \
-                                      not self.p1.overlap()
-            self.alive[self.p2] = not self.p2.collides(self.p1) and \
-                                      self.p2.inbounds(bounds) and \
-                                      not self.p2.overlap()
+            if not self.p1.checkAlive(self.p2, bounds):
+                self.gameState = GameState.GAMEOVER
+                self.p2.score += 1
 
-        if False in self.alive.values():
-            self.gameState = GameState.GAMEOVER
+            if not self.p2.checkAlive(self.p1, bounds):
+                self.gameState = GameState.GAMEOVER
+                self.p1.score += 1
 
     def draw(self):
         # Keep drawing the players so that the menu is more
@@ -89,6 +84,8 @@ class Game(PygameHelper):
     def _p2DirKeyup(self, event):
         self.p2.turnable = True
 
+    # Create the pause menu with the current game screen as
+    # the parent.
     def _pauseMenu(self, event):
         pauseMenu = PauseMenu(self)
-        pauseMenu.execute(50)
+        pauseMenu.execute(self.fps)
