@@ -11,6 +11,7 @@
 
 from Menu import Menu
 from Game import Game
+from SettingsMenu import SettingsMenu
 
 class MainMenu(Menu):
     def __init__(self, size=(640, 480), fill=(255, 255, 255)):
@@ -19,11 +20,16 @@ class MainMenu(Menu):
         super(MainMenu, self).__init__(options=options, size=size, fill=fill)
 
         self.addOptionCallback("Local", self._startGame)
+        self.addOptionCallback("Settings", self._settingsMenu)
         self.addOptionCallback("Quit", self.quit)
 
     def _startGame(self):
         g = Game(parent=self)
         g.execute(self.fps)
+
+    def _settingsMenu(self):
+        settings = SettingsMenu(parent=self)
+        settings.execute(self.fps)
 
 if __name__ == "__main__":
     menu = MainMenu()
