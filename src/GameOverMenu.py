@@ -28,6 +28,7 @@ class GameOverMenu(Menu):
 
     def draw(self):
         super(GameOverMenu, self).draw()
+
         self.p1Score.draw(self.screen)
         self.p2Score.draw(self.screen)
 
