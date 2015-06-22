@@ -12,7 +12,7 @@
 import pygame
 
 from pygame.locals import *
-from PygameHelper import PygameHelper, TextDisp
+from widgets import PygameHelper, TextDisp
 from LineRider import Direction, LineRider
 from PauseMenu import PauseMenu
 from GameOverMenu import GameOverMenu
@@ -26,15 +26,16 @@ class Game(PygameHelper):
         super(Game, self).__init__(parent, size, fill)
 
         self.gameState = GameState.TIMER
-        self.timer = 4
+        self.timer = 3
         self.millis = 1000
-        self.timerDisp = TextDisp(size[0] / 2, size[1] / 2, "3")
+        self.timerDisp = TextDisp(self.size[0] / 2, self.size[1] / 2, str(self.timer))
 
-        self.p1 = LineRider(10, size[1] / 2, Direction.RIGHT, color=(50, 200, 12))
-        self.p2 = LineRider(size[0] - 15, size[1] / 2, Direction.LEFT)
+        self.p1 = LineRider(10, self.size[1] / 2,
+                            Direction.RIGHT, color=(50, 200, 12))
+        self.p2 = LineRider(self.size[0] - 15, self.size[1] / 2, Direction.LEFT)
 
         self.p1Score = TextDisp(10, 10, "0")
-        self.p2Score = TextDisp(size[0] - 20, 10, "0")
+        self.p2Score = TextDisp(self.size[0] - 20, 10, "0")
 
         # Add callbacks for moving the players.
         self.addEventCallback((KEYDOWN, (K_RIGHT, K_LEFT)), self._p1DirKeydown)
@@ -53,15 +54,16 @@ class Game(PygameHelper):
 
     def resetTimer(self):
         self.gameState = GameState.TIMER
-        self.timer = 4
+        self.timer = 3
         self.millis = 1000
         self.timerDisp.text = str(self.timer)
 
     # Simply move each player along as needed
     def update(self):
         if self.gameState == GameState.TIMER:
-            self.timer -= 1
             self.timerDisp.text = str(self.timer)
+
+            self.timer -= 1
             if self.timer == 0:
                 self.gameState = GameState.PLAYING
                 self.millis = 0

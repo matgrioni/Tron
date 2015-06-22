@@ -9,9 +9,9 @@
 # option selections.
 ###########################################################
 
-from Menu import Menu
-from Game import Game
+from widgets import Menu
 from SettingsMenu import SettingsMenu
+from Game import Game
 
 class MainMenu(Menu):
     def __init__(self, size=(640, 480), fill=(255, 255, 255)):

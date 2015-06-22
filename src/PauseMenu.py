@@ -8,8 +8,7 @@
 # library.
 ###########################################################
 
-from Menu import Menu
-from PygameHelper import TextDisp
+from widgets import Menu, PygameHelper, TextDisp
 
 class PauseMenu(Menu):
     def __init__(self, scores, parent=None, size=(640, 480), fill=(255, 255, 255)):

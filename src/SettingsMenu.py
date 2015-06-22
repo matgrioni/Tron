@@ -7,7 +7,7 @@
 # A menu of the possible settings for the game.
 ###########################################################
 
-from Menu import Menu
+from widgets import Menu
 
 class SettingsMenu(Menu):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):

@@ -8,8 +8,7 @@
 # dies. Similar to the pause menu however no resume option.
 ###########################################################
 
-from Menu import Menu
-from PygameHelper import TextDisp
+from widgets import Menu, TextDisp
 
 class GameOverMenu(Menu):
     def __init__(self, scores, parent=None, size=(640, 480),
