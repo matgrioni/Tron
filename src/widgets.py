@@ -12,6 +12,7 @@
 
 import pygame
 import sys
+import string
 from pygame.locals import *
 
 ###########################################################
@@ -34,7 +35,7 @@ from pygame.locals import *
 # This gives the user more ability to control what and when
 # is being called for the events.
 ###########################################################
-class PygameHelper(object):
+class Module(object):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
         # If this is the root PygameHelper object must initialize
         # pygame and create the screen. Otherwise take these objects
@@ -229,6 +230,40 @@ class TextDisp(object):
 
 ###########################################################
 # Author: Matias Grioni
+# Created: 6/22/15
+#
+# An input box that takes up the whole screen, and accepts
+# text input. This is a very rudimentary form of input and
+# should be tweaked in the future.
+###########################################################
+class InputDisp(Module):
+    def __init__(self, query, font="monospace", fontsize=20, parent=None,
+                 size=(640, 480), fill=(255, 255, 255)):
+        super(InputDisp, self).__init__(parent, size, fill)
+        self.printable = [p for p in string.printable \
+                          if p not in string.whitespace or p == " "]
+        self.x = size[0] / 2 - 100
+        self.y = 100
+
+        self.text = query
+        self.font = pygame.font.SysFont(font, fontsize)
+
+        self.addEventCallback((KEYDOWN, None), self._addEventChar)
+        self.addEventCallback((KEYDOWN, K_RETURN), self._finish)
+
+    def draw(self):
+        surface = self.font.render(self.text, False, (0, 0, 0))
+        self.screen.blit(surface, (self.x, self.y))
+
+    def _addEventChar(self, e):
+        if e.unicode in self.printable:
+            self.text += e.unicode
+
+    def _finish(self, e):
+        self.back()
+
+###########################################################
+# Author: Matias Grioni
 # Created: 6/14/15
 #
 # A menu class that extends PygameHelper. This way
@@ -237,7 +272,7 @@ class TextDisp(object):
 # For now only a fullscreen menu is allowed. Module contains
 # all the menus that will be used in the program.
 ###########################################################
-class Menu(PygameHelper):
+class Menu(Module):
     def __init__(self, options, parent=None, size=(640, 480), fill=(255, 255, 255)):
         super(Menu, self).__init__(parent, size, fill)
 
