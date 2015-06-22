@@ -8,11 +8,11 @@
 # library.
 ###########################################################
 
-from widgets import Menu, PygameHelper, TextDisp
+from widgets import Menu, TextDisp
 
 class PauseMenu(Menu):
     def __init__(self, scores, parent=None, size=(640, 480), fill=(255, 255, 255)):
-        options = ["Resume", "Start over", "Main menu", "Settings", "Quit"]
+        options = ["Resume", "Start over", "Main menu", "Quit"]
         super(PauseMenu, self).__init__(options, parent, size, fill)
 
         self.addOptionCallback("Resume", self._resumeGame)

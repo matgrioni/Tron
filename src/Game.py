@@ -5,14 +5,14 @@
 # Created: 6/6/15
 #
 # Main Game class definition and execution. The class
-# extends PygameHelper and update, draw, etc are overriden
+# extends Module and update, draw, etc are overriden
 # and defined for this specific Tron game.
 ##########################################################
 
 import pygame
 
 from pygame.locals import *
-from widgets import PygameHelper, TextDisp
+from widgets import Module, TextDisp
 from LineRider import Direction, LineRider
 from PauseMenu import PauseMenu
 from GameOverMenu import GameOverMenu
@@ -21,7 +21,7 @@ from GameOverMenu import GameOverMenu
 class GameState(object):
     PLAYING, PAUSE, GAMEOVER, TIMER = range(4)
 
-class Game(PygameHelper):
+class Game(Module):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
         super(Game, self).__init__(parent, size, fill)
 
@@ -62,9 +62,9 @@ class Game(PygameHelper):
     def update(self):
         if self.gameState == GameState.TIMER:
             self.timerDisp.text = str(self.timer)
-
             self.timer -= 1
-            if self.timer == 0:
+
+            if self.timer < 0:
                 self.gameState = GameState.PLAYING
                 self.millis = 0
         elif self.gameState == GameState.PLAYING:
@@ -73,19 +73,19 @@ class Game(PygameHelper):
 
             bounds = (0, 0, self.size[0], self.size[1])
 
-            if not self.p1.checkAlive(self.p2, bounds):
-                self.gameState = GameState.GAMEOVER
-                self.p2.score += 1
-                self.p2Score.text = str(self.p2.score)
+            alive = (self.p1.checkAlive(self.p2, bounds),
+                     self.p2.checkAlive(self.p1, bounds))
 
-                gameOver = GameOverMenu([self.p1.score, self.p2.score],
-                                        parent=self)
-                gameOver.execute(self.fps)
+            if not (alive[0] and alive[1]):
+                if not alive[0]:
+                    self.gameState = GameState.GAMEOVER
+                    self.p2.score += 1
+                    self.p2Score.text = str(self.p2.score)
 
-            if not self.p2.checkAlive(self.p1, bounds):
-                self.gameState = GameState.GAMEOVER
-                self.p1.score += 1
-                self.p1Score.text = str(self.p1.score)
+                if not alive[1]:
+                    self.gameState = GameState.GAMEOVER
+                    self.p1.score += 1
+                    self.p1Score.text = str(self.p1.score)
 
                 gameOver = GameOverMenu([self.p1.score, self.p2.score],
                                         parent=self)
