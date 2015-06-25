@@ -11,12 +11,15 @@ from widgets import InputDisp, Menu
 
 class SettingsMenu(Menu):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
-        options = ["Player colors", "Background Color", "Back"]
+        options = ["Player 1 Color", "Player 2 Color",
+                   "Background Color", "Back"]
         super(SettingsMenu, self).__init__(options, parent, size, fill)
 
-        self.addOptionCallback("Player colors", self._input)
+        self.addOptionCallback("Player 1 Color", self._saveColor, "p1")
+        self.addOptionCallback("Player 2 Color", self._saveColor, "p2")
+        self.addOptionCallback("Background Color", self._saveColor, "bg")
         self.addOptionCallback("Back", self.back)
 
-    def _input(self):
-        inputDisp = InputDisp("Color: ", parent=self)
+    def _saveColor(self, desc):
+        inputDisp = InputDisp("Color: ", parent=self, fontsize=15)
         inputDisp.execute(self.fps)
