@@ -9,7 +9,7 @@
 # option selections.
 ###########################################################
 
-from widgets import Menu
+from widgets import Menu, PopupModule
 from SettingsMenu import SettingsMenu
 from Game import Game
 
@@ -28,7 +28,9 @@ class MainMenu(Menu):
         g.execute(self.fps)
 
     def _settingsMenu(self):
+        p = PopupModule(self, pos=(340, 320), fill=(0, 0, 0))
         settings = SettingsMenu(parent=self)
+        settings.addPopup(p)
         settings.execute(self.fps)
 
 if __name__ == "__main__":

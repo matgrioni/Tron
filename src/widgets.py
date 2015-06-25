@@ -37,6 +37,10 @@ from pygame.locals import *
 ###########################################################
 class Module(object):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
+        # This is only included so that when widget classes that extend this
+        # can easily extend the constructor while using multiple inheritance
+        super(Module, self).__init__()
+
         # If this is the root PygameHelper object must initialize
         # pygame and create the screen. Otherwise take these objects
         # from the provided parent.
@@ -49,6 +53,7 @@ class Module(object):
             self.size = (self.screen.get_width(), self.screen.get_height())
 
         self.parent = parent
+        self.popup = None
         self.fill = fill
         self.running = False
         self.clock = pygame.time.Clock()
@@ -88,8 +93,8 @@ class Module(object):
     #
     # Lastly, the callback should have a function parameter 
     # for an event.
-    def addEventCallback(self, event, callback):
-        self.eventCallbacks[event] = callback
+    def addEventCallback(self, event, callback, *args, **kwargs):
+        self.eventCallbacks[event] = (callback, args, kwargs)
 
     # Removes the callback for the provided event and returns the
     # previously added callback or None if there was none defined
@@ -130,7 +135,7 @@ class Module(object):
             # Check specifics first.
             if info in self.eventCallbacks:
                 callback = self.eventCallbacks[info]
-                callback(e)
+                self._handleCallback(e, callback)
 
             # Then check for a callback linked to multiple events
             # such as (KEYDOWN, (K_ESCAPE, K_UP))
@@ -138,13 +143,21 @@ class Module(object):
                 if type(key[1]) is tuple:
                     if info[0] == key[0] and info[1] in key[1]:
                         callback = self.eventCallbacks[key]
-                        callback(e)
+                        self._handleCallback(e, callback)
 
             # Also check if the general callback for only the
             # event type is defined.
             if (e.type, None) in self.eventCallbacks:
                 callback = self.eventCallbacks[(e.type, None)]
-                callback(e)
+                self._handleCallback(e, callback)
+
+    # Provided the tuple of (callback, *args, **kwargs) call the method
+    def _handleCallback(self, e, callback):
+        func = callback[0]
+        args = callback[1]
+        kwargs = callback[2]
+
+        func(e, *args, **kwargs)
 
     # Update the game state after one loop iteration. This helper class
     # does not implement this but a class that does implements the game
@@ -156,6 +169,13 @@ class Module(object):
     # in classes that derive from PygameHelper.
     def draw(self):
         pass
+
+    # Add a PopupModule to this Module.
+    # TODO: This is really just a wrapper for .execute
+    # Try to make it a bit better of window management
+    def addPopup(self, popup):
+        self.popup = popup
+        self.popup.execute(self.fps)
 
     # Runs the current game definition in this instance of PygameHelper.
     def execute(self, fps=0):
@@ -212,6 +232,37 @@ class Module(object):
 
 ###########################################################
 # Author: Matias Grioni
+# Created: 6/23/15
+#
+# A class that is similar to a Module but is displayed over
+# an existing module.
+###########################################################
+class PopupModule(Module):
+    def __init__(self, parent, pos=(0, 0), size=(100, 50),
+                 fill=(255, 255, 255)):
+        self.parent = parent
+        self.screen = pygame.Surface(size)
+        self.popup = None
+
+        self.running = False
+
+        self.pos = pos
+        self.size = size
+        self.fill = fill
+        self.clock = pygame.time.Clock()
+        self.millis = 0
+
+        self.eventCallbacks = {}
+
+        self.addEventCallback((KEYDOWN, K_ESCAPE), self.back)
+
+    # The draw method in PopupModule provides draws the Popup
+    # and returns the surface it was drawn on.
+    def draw(self):
+        self.parent.screen.blit(self.screen, self.pos)
+
+###########################################################
+# Author: Matias Grioni
 # Created: 6/21/15
 #
 # Widget to display any arbitrary text in desired style
@@ -228,6 +279,10 @@ class TextDisp(object):
         surface = self.font.render(self.text, False, (0, 0, 0))
         screen.blit(surface, (self.x, self.y))
 
+class SettingModule(object):
+    def setting(self):
+        pass
+
 ###########################################################
 # Author: Matias Grioni
 # Created: 6/22/15
@@ -236,30 +291,38 @@ class TextDisp(object):
 # text input. This is a very rudimentary form of input and
 # should be tweaked in the future.
 ###########################################################
-class InputDisp(Module):
+class InputDisp(Module, SettingModule):
     def __init__(self, query, font="monospace", fontsize=20, parent=None,
                  size=(640, 480), fill=(255, 255, 255)):
         super(InputDisp, self).__init__(parent, size, fill)
         self.printable = [p for p in string.printable \
                           if p not in string.whitespace or p == " "]
-        self.x = size[0] / 2 - 100
+        self.x = size[0] / 2 - 200
         self.y = 100
 
-        self.text = query
+        self.entry = ""
+        self.query = query
         self.font = pygame.font.SysFont(font, fontsize)
 
         self.addEventCallback((KEYDOWN, None), self._addEventChar)
         self.addEventCallback((KEYDOWN, K_RETURN), self._finish)
+        self.addEventCallback((KEYDOWN, K_BACKSPACE), self._backspace)
 
     def draw(self):
-        surface = self.font.render(self.text, False, (0, 0, 0))
+        self.screen.fill(self.fill)
+
+        surface = self.font.render(self.query + self.entry, False, (0, 0, 0))
         self.screen.blit(surface, (self.x, self.y))
+
+    def _backspace(self, e):
+        self.entry = self.entry[:-1]
 
     def _addEventChar(self, e):
         if e.unicode in self.printable:
-            self.text += e.unicode
+            self.entry += e.unicode
 
     def _finish(self, e):
+        self.save()
         self.back()
 
 ###########################################################
