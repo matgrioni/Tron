@@ -7,7 +7,7 @@
 # A menu of the possible settings for the game.
 ###########################################################
 
-from widgets import InputDisp, Menu
+from widgets import InputBox, Menu
 
 class SettingsMenu(Menu):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
@@ -21,5 +21,5 @@ class SettingsMenu(Menu):
         self.addOptionCallback("Back", self.back)
 
     def _saveColor(self, desc):
-        inputDisp = InputDisp("Color: ", parent=self, fontsize=15)
+        inputDisp = InputBox("Color: ", parent=self, fontsize=15)
         inputDisp.execute(self.fps)

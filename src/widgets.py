@@ -53,7 +53,7 @@ class Module(object):
             self.size = (self.screen.get_width(), self.screen.get_height())
 
         self.parent = parent
-        self.popup = None
+
         self.fill = fill
         self.running = False
         self.clock = pygame.time.Clock()
@@ -170,13 +170,6 @@ class Module(object):
     def draw(self):
         pass
 
-    # Add a PopupModule to this Module.
-    # TODO: This is really just a wrapper for .execute
-    # Try to make it a bit better of window management
-    def addPopup(self, popup):
-        self.popup = popup
-        self.popup.execute(self.fps)
-
     # Runs the current game definition in this instance of PygameHelper.
     def execute(self, fps=0):
         self.running = True
@@ -230,6 +223,7 @@ class Module(object):
         pygame.quit()
         sys.exit()
 
+# I didn't like this implementation so I'm gonna shelve it for now
 ###########################################################
 # Author: Matias Grioni
 # Created: 6/23/15
@@ -237,7 +231,7 @@ class Module(object):
 # A class that is similar to a Module but is displayed over
 # an existing module.
 ###########################################################
-class PopupModule(Module):
+"""class PopupModule(Module):
     def __init__(self, parent, pos=(0, 0), size=(100, 50),
                  fill=(255, 255, 255)):
         self.parent = parent
@@ -259,7 +253,51 @@ class PopupModule(Module):
     # The draw method in PopupModule provides draws the Popup
     # and returns the surface it was drawn on.
     def draw(self):
-        self.parent.screen.blit(self.screen, self.pos)
+        self.parent.screen.blit(self.screen, self.pos)"""
+
+###########################################################
+# Author: Matias Grioni
+# Created: 6/24/15
+#
+# A module that wishes to have a setting associated with it
+# should inherit from this. Essentially a key and value
+# pair, which will be saved in a new line in the settings
+# file defined globally in this module.
+###########################################################
+class SettingModule(object):
+    SETTINGS = "../settings/settings.txt"
+
+    # Set the name of this setting. Note the name should not
+    # have double colons
+    def setting(self, name):
+        self.name = name
+
+    # Save the value provided along with the name in the game
+    # settings file as a newline @"name::value" or overwrites
+    # an existing line
+    def save(self, value):
+        self.value = value
+
+        with open(SETTINGS, "r+") as f:
+            for line in f.readlines():
+                args = line.split("::")
+
+                if args[0] == self.name:
+                    line = args[0] + "::" + value
+                f.write(line)
+
+    # Given the current name of the setting, return the value
+    # defined for it in the settings file or None if it is not
+    # defined.
+    def load(self):
+        with open(SETTINGS, "r") as f:
+            for line in f.readlines():
+                args = line.split("::")
+
+                if args[0] == self.name:
+                    return args[1]
+
+        return None
 
 ###########################################################
 # Author: Matias Grioni
@@ -279,9 +317,6 @@ class TextDisp(object):
         surface = self.font.render(self.text, False, (0, 0, 0))
         screen.blit(surface, (self.x, self.y))
 
-class SettingModule(object):
-    def setting(self):
-        pass
 
 ###########################################################
 # Author: Matias Grioni
@@ -291,7 +326,7 @@ class SettingModule(object):
 # text input. This is a very rudimentary form of input and
 # should be tweaked in the future.
 ###########################################################
-class InputDisp(Module, SettingModule):
+class InputBox(Module, SettingModule):
     def __init__(self, query, font="monospace", fontsize=20, parent=None,
                  size=(640, 480), fill=(255, 255, 255)):
         super(InputDisp, self).__init__(parent, size, fill)
