@@ -23,7 +23,10 @@ class GameState(object):
 
 class Game(widgets.Module):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
-        super(Game, self).__init__(parent, size, fill)
+        bgColor = widgets.Setting.attr("bg", str(fill))
+        self._initBackground()
+
+        super(Game, self).__init__(parent, size, self.bgColor)
 
         self.gameState = GameState.TIMER
         self.timer = 3
@@ -42,12 +45,18 @@ class Game(widgets.Module):
 
         self.addEventCallback((KEYDOWN, K_SPACE), self._pauseMenu)
 
+    def _initBackground(self):
+        bgColorStr = widgets.Setting.attr("bg", "(255, 255, 255)")
+        bgChannels = [int(i) for i in bgColorStr.strip()[1:-1].split(",")]
+
+        self.bgColor = tuple(bgChannels)
+
     def _initPlayers(self):
         p1ColorStr = widgets.Setting.attr("p1", "(50, 100, 12)")
         p2ColorStr = widgets.Setting.attr("p2", "(0, 0, 0)")
 
-        p1Channels = [int(i) for i in p1ColorStr[1:-1].strip().split(",")]
-        p2Channels = [int(i) for i in p2ColorStr[1:-1].strip().split(",")]
+        p1Channels = [int(i) for i in p1ColorStr.strip()[1:-1].split(",")]
+        p2Channels = [int(i) for i in p2ColorStr.strip()[1:-1].split(",")]
 
         p1Color, p2Color = tuple(p1Channels), tuple(p2Channels)
 
