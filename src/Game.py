@@ -28,14 +28,10 @@ class Game(widgets.Module):
         self.gameState = GameState.TIMER
         self.timer = 3
         self.millis = 1000
-        self.timerDisp = widgets.TextDisp(self.size[0] / 2, self.size[1] / 2, str(self.timer))
+        self.timerDisp = widgets.TextDisp(self.size[0] / 2,
+                                          self.size[1] / 2, str(self.timer))
 
-        self.p1 = LineRider(10, self.size[1] / 2,
-                            Direction.RIGHT, color=(50, 200, 12))
-        self.p2 = LineRider(self.size[0] - 15, self.size[1] / 2, Direction.LEFT)
-
-        self.p1Score = widgets.TextDisp(10, 10, "0")
-        self.p2Score = widgets.TextDisp(self.size[0] - 20, 10, "0")
+        self._initPlayers()
 
         # Add callbacks for moving the players.
         self.addEventCallback((KEYDOWN, (K_RIGHT, K_LEFT)), self._p1DirKeydown)
@@ -45,6 +41,23 @@ class Game(widgets.Module):
         self.addEventCallback((KEYUP, (K_a, K_d)), self._p2DirKeyup)
 
         self.addEventCallback((KEYDOWN, K_SPACE), self._pauseMenu)
+
+    def _initPlayers(self):
+        p1ColorStr = widgets.Setting.attr("p1", "(50, 100, 12)")
+        p2ColorStr = widgets.Setting.attr("p2", "(0, 0, 0)")
+
+        p1Channels = [int(i) for i in p1ColorStr[1:-1].strip().split(",")]
+        p2Channels = [int(i) for i in p2ColorStr[1:-1].strip().split(",")]
+
+        p1Color, p2Color = tuple(p1Channels), tuple(p2Channels)
+
+        self.p1 = LineRider(10, self.size[1] / 2,
+                            Direction.RIGHT, color=p1Color)
+        self.p2 = LineRider(self.size[0] - 15, self.size[1] / 2,
+                            Direction.LEFT, color=p2Color)
+
+        self.p1Score = widgets.TextDisp(10, 10, "0")
+        self.p2Score = widgets.TextDisp(self.size[0] - 20, 10, "0")
 
     def reset(self):
         self.p1.reset()

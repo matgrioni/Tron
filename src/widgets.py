@@ -274,11 +274,17 @@ class Setting(object):
     # defined for it in the settings file or None if it is not
     # defined.
     def load(self, default=None):
+        return Setting.attr(self.key, default)
+
+    # The static method version of load. Does not require an instance
+    # to load the file and the key and value pair
+    @staticmethod
+    def attr(key, default=None):
         with open(Setting.SETTINGSFILE, "r") as f:
             for line in f.readlines():
                 args = line.strip("\r\n").split("::")
 
-                if args[0] == self.key:
+                if args[0] == key:
                     return args[1]
 
         return default
