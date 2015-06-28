@@ -332,6 +332,10 @@ class SettingInput(Module, SettingModule):
         self.addEventCallback((KEYDOWN, K_RETURN), self._finish)
         self.addEventCallback((KEYDOWN, K_BACKSPACE), self._backspace)
 
+    def setting(self, regex, value):
+        super(SettingInput, self).setting(regex, value)
+        self.entry = self.load()
+
     def setFont(self, font="monospace", fontsize=20):
         self.font = pygame.font.SysFont(font, fontsize)
 
