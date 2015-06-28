@@ -232,13 +232,11 @@ class Module(object):
 # pair, which will be saved in a new line in the settings
 # file defined globally in this module.
 ###########################################################
-class SettingModule(object):
-    SETTINGS = "../settings/settings.txt"
+class Setting(object):
+    SETTINGSFILE = "../settings/settings.txt"
 
-    # Set the name of this setting. Note the name should not
-    # have double colons
-    def setting(self, name, regex):
-        self.name = name
+    def setup(self, key, regex):
+        self.key = key
         self.regex = regex
 
     # Used to check if the provided setting matches what is desired
@@ -252,23 +250,21 @@ class SettingModule(object):
     # settings file as a newline @"name::value" or overwrites
     # an existing line
     def save(self, value):
-        self.value = value
-
-        with open(SettingModule.SETTINGS, "r+") as f:
+        with open(Setting.SETTINGSFILE, "r+") as f:
             found = False
             newLines = []
             for line in f.readlines():
                 s = line.strip("\r\n")
                 args = s.split("::")
 
-                if args[0] == self.name:
+                if args[0] == self.key:
                     found = True
-                    newLines.append(self.name + "::" + self.value)
+                    newLines.append(self.key + "::" + value)
                 else:
                     newLines.append(s)
 
             if not found:
-                newLines.append(self.name + "::" + self.value)
+                newLines.append(self.key + "::" + value)
 
             f.seek(0)
             f.truncate()
@@ -277,15 +273,15 @@ class SettingModule(object):
     # Given the current name of the setting, return the value
     # defined for it in the settings file or None if it is not
     # defined.
-    def load(self):
-        with open(SettingModule.SETTINGS, "r") as f:
+    def load(self, default=None):
+        with open(Setting.SETTINGSFILE, "r") as f:
             for line in f.readlines():
                 args = line.strip("\r\n").split("::")
 
-                if args[0] == self.name:
+                if args[0] == self.key:
                     return args[1]
 
-        return None
+        return default
 
 ###########################################################
 # Author: Matias Grioni
@@ -313,7 +309,7 @@ class TextDisp(object):
 # text input. This is a very rudimentary form of input and
 # should be tweaked in the future.
 ###########################################################
-class SettingInput(Module, SettingModule):
+class SettingInput(Module, Setting):
     def __init__(self, query, parent=None,
                  size=(640, 480), fill=(255, 255, 255)):
         super(SettingInput, self).__init__(parent, size, fill)
@@ -332,9 +328,9 @@ class SettingInput(Module, SettingModule):
         self.addEventCallback((KEYDOWN, K_RETURN), self._finish)
         self.addEventCallback((KEYDOWN, K_BACKSPACE), self._backspace)
 
-    def setting(self, regex, value):
-        super(SettingInput, self).setting(regex, value)
-        self.entry = self.load()
+    def setup(self, key, regex):
+        super(SettingInput, self).setup(key, regex)
+        self.entry = self.load("")
 
     def setFont(self, font="monospace", fontsize=20):
         self.font = pygame.font.SysFont(font, fontsize)

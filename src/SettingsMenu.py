@@ -23,6 +23,6 @@ class SettingsMenu(widgets.Menu):
     def _saveColor(self, desc):
         inputBox = widgets.SettingInput("Color: ", parent=self)
         inputBox.setFont("monospace", 15)
-        inputBox.setting(desc, "\\d")
+        inputBox.setup(desc, "\\d")
 
         inputBox.execute(self.fps)
