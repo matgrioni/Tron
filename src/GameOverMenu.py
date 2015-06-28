@@ -8,9 +8,9 @@
 # dies. Similar to the pause menu however no resume option.
 ###########################################################
 
-from widgets import Menu, TextDisp
+import widgets
 
-class GameOverMenu(Menu):
+class GameOverMenu(widgets.Menu):
     def __init__(self, scores, parent=None, size=(640, 480),
                  fill=(255, 255, 255)):
         options = ["Next game", "Main menu", "Quit"]
@@ -20,11 +20,11 @@ class GameOverMenu(Menu):
         self.addOptionCallback("Main menu", self.back, count=2)
         self.addOptionCallback("Quit", self.quit)
 
-        self.p1Score = TextDisp(10, 10, "Player 1: " + str(scores[0]),
-                                fontsize=15)
-        self.p2Score = TextDisp(self.size[0] - 150, 10,
-                                "Player 2: " + str(scores[1]),
-                                fontsize=15)
+        self.p1Score = widgets.TextDisp(10, 10, "Player 1: " + str(scores[0]),
+                                        fontsize=15)
+        self.p2Score = widgets.TextDisp(self.size[0] - 150, 10,
+                                        "Player 2: " + str(scores[1]),
+                                        fontsize=15)
 
     def draw(self):
         super(GameOverMenu, self).draw()

@@ -11,8 +11,8 @@
 
 import pygame
 
+import widgets
 from pygame.locals import *
-from widgets import Module, TextDisp
 from LineRider import Direction, LineRider
 from PauseMenu import PauseMenu
 from GameOverMenu import GameOverMenu
@@ -21,21 +21,21 @@ from GameOverMenu import GameOverMenu
 class GameState(object):
     PLAYING, PAUSE, GAMEOVER, TIMER = range(4)
 
-class Game(Module):
+class Game(widgets.Module):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
         super(Game, self).__init__(parent, size, fill)
 
         self.gameState = GameState.TIMER
         self.timer = 3
         self.millis = 1000
-        self.timerDisp = TextDisp(self.size[0] / 2, self.size[1] / 2, str(self.timer))
+        self.timerDisp = widgets.TextDisp(self.size[0] / 2, self.size[1] / 2, str(self.timer))
 
         self.p1 = LineRider(10, self.size[1] / 2,
                             Direction.RIGHT, color=(50, 200, 12))
         self.p2 = LineRider(self.size[0] - 15, self.size[1] / 2, Direction.LEFT)
 
-        self.p1Score = TextDisp(10, 10, "0")
-        self.p2Score = TextDisp(self.size[0] - 20, 10, "0")
+        self.p1Score = widgets.TextDisp(10, 10, "0")
+        self.p2Score = widgets.TextDisp(self.size[0] - 20, 10, "0")
 
         # Add callbacks for moving the players.
         self.addEventCallback((KEYDOWN, (K_RIGHT, K_LEFT)), self._p1DirKeydown)
