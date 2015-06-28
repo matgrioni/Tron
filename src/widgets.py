@@ -12,7 +12,7 @@
 
 import pygame
 import sys
-import string
+import string, re
 from pygame.locals import *
 
 ###########################################################
@@ -223,38 +223,6 @@ class Module(object):
         pygame.quit()
         sys.exit()
 
-# I didn't like this implementation so I'm gonna shelve it for now
-###########################################################
-# Author: Matias Grioni
-# Created: 6/23/15
-#
-# A class that is similar to a Module but is displayed over
-# an existing module.
-###########################################################
-"""class PopupModule(Module):
-    def __init__(self, parent, pos=(0, 0), size=(100, 50),
-                 fill=(255, 255, 255)):
-        self.parent = parent
-        self.screen = pygame.Surface(size)
-        self.popup = None
-
-        self.running = False
-
-        self.pos = pos
-        self.size = size
-        self.fill = fill
-        self.clock = pygame.time.Clock()
-        self.millis = 0
-
-        self.eventCallbacks = {}
-
-        self.addEventCallback((KEYDOWN, K_ESCAPE), self.back)
-
-    # The draw method in PopupModule provides draws the Popup
-    # and returns the surface it was drawn on.
-    def draw(self):
-        self.parent.screen.blit(self.screen, self.pos)"""
-
 ###########################################################
 # Author: Matias Grioni
 # Created: 6/24/15
@@ -269,8 +237,16 @@ class SettingModule(object):
 
     # Set the name of this setting. Note the name should not
     # have double colons
-    def setting(self, name):
+    def setting(self, name, regex):
         self.name = name
+        self.regex = regex
+
+    # Used to check if the provided setting matches what is desired
+    # Uses a regex to check if the match is correct. True if the
+    # input is valid, False otherwise.
+    def check(self, value):
+        match = re.match(self.regex, value)
+        return match is not None and match.group(0) == value
 
     # Save the value provided along with the name in the game
     # settings file as a newline @"name::value" or overwrites
@@ -278,21 +254,33 @@ class SettingModule(object):
     def save(self, value):
         self.value = value
 
-        with open(SETTINGS, "r+") as f:
+        with open(SettingModule.SETTINGS, "r+") as f:
+            found = False
+            newLines = []
             for line in f.readlines():
-                args = line.split("::")
+                s = line.strip("\r\n")
+                args = s.split("::")
 
                 if args[0] == self.name:
-                    line = args[0] + "::" + value
-                f.write(line)
+                    found = True
+                    newLines.append(self.name + "::" + self.value)
+                else:
+                    newLines.append(s)
+
+            if not found:
+                newLines.append(self.name + "::" + self.value)
+
+            f.seek(0)
+            f.truncate()
+            f.write("\n".join(newLines))
 
     # Given the current name of the setting, return the value
     # defined for it in the settings file or None if it is not
     # defined.
     def load(self):
-        with open(SETTINGS, "r") as f:
+        with open(SettingModule.SETTINGS, "r") as f:
             for line in f.readlines():
-                args = line.split("::")
+                args = line.strip("\r\n").split("::")
 
                 if args[0] == self.name:
                     return args[1]
@@ -317,7 +305,6 @@ class TextDisp(object):
         surface = self.font.render(self.text, False, (0, 0, 0))
         screen.blit(surface, (self.x, self.y))
 
-
 ###########################################################
 # Author: Matias Grioni
 # Created: 6/22/15
@@ -326,10 +313,10 @@ class TextDisp(object):
 # text input. This is a very rudimentary form of input and
 # should be tweaked in the future.
 ###########################################################
-class InputBox(Module, SettingModule):
-    def __init__(self, query, font="monospace", fontsize=20, parent=None,
+class SettingInput(Module, SettingModule):
+    def __init__(self, query, parent=None,
                  size=(640, 480), fill=(255, 255, 255)):
-        super(InputDisp, self).__init__(parent, size, fill)
+        super(SettingInput, self).__init__(parent, size, fill)
         self.printable = [p for p in string.printable \
                           if p not in string.whitespace or p == " "]
         self.x = size[0] / 2 - 200
@@ -337,17 +324,24 @@ class InputBox(Module, SettingModule):
 
         self.entry = ""
         self.query = query
-        self.font = pygame.font.SysFont(font, fontsize)
+        self.font = pygame.font.SysFont("monospace", 20)
+
+        self.errorMsg = TextDisp(0, 0)
 
         self.addEventCallback((KEYDOWN, None), self._addEventChar)
         self.addEventCallback((KEYDOWN, K_RETURN), self._finish)
         self.addEventCallback((KEYDOWN, K_BACKSPACE), self._backspace)
 
+    def setFont(self, font="monospace", fontsize=20):
+        self.font = pygame.font.SysFont(font, fontsize)
+
     def draw(self):
         self.screen.fill(self.fill)
 
-        surface = self.font.render(self.query + self.entry, False, (0, 0, 0))
-        self.screen.blit(surface, (self.x, self.y))
+        fSurface = self.font.render(self.query + self.entry, False, (0, 0, 0))
+        self.screen.blit(fSurface, (self.x, self.y))
+        
+        self.errorMsg.draw(self.screen)
 
     def _backspace(self, e):
         self.entry = self.entry[:-1]
@@ -357,8 +351,15 @@ class InputBox(Module, SettingModule):
             self.entry += e.unicode
 
     def _finish(self, e):
-        self.save()
-        self.back()
+        if self.regex != "":
+            if self.check(self.entry):
+                self.save(self.entry)
+                self.back()
+            else:
+                self.errorMsg.text = "Input does not match required format"
+        else:
+            self.save(self.entry)
+            self.back()
 
 ###########################################################
 # Author: Matias Grioni

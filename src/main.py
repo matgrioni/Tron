@@ -9,11 +9,11 @@
 # option selections.
 ###########################################################
 
-from widgets import Menu, PopupModule
+import widgets
 from SettingsMenu import SettingsMenu
 from Game import Game
 
-class MainMenu(Menu):
+class MainMenu(widgets.Menu):
     def __init__(self, size=(640, 480), fill=(255, 255, 255)):
         # No parent, this is the parent PygameHelper module
         options = ["Local", "Network", "Settings", "Quit"]
@@ -28,9 +28,7 @@ class MainMenu(Menu):
         g.execute(self.fps)
 
     def _settingsMenu(self):
-        p = PopupModule(self, pos=(340, 320), fill=(0, 0, 0))
         settings = SettingsMenu(parent=self)
-        settings.addPopup(p)
         settings.execute(self.fps)
 
 if __name__ == "__main__":
