@@ -352,9 +352,9 @@ class SettingInput(Module, Setting):
 
     # This inherits from Setting which will set the key value for this
     # SettingInput and also the regex to check the input against
-    def setup(self, key, regex=""):
+    def setup(self, key, regex="", default=""):
         super(SettingInput, self).setup(key, regex)
-        self.entry = self.load("")
+        self.entry = self.load(default)
 
     # Set the font attributes for the entire screen / module
     def setFont(self, font="monospace", fontsize=20, color=(0, 0, 0)):

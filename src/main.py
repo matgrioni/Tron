@@ -12,6 +12,7 @@
 import widgets
 from SettingsMenu import SettingsMenu
 from Game import Game
+import PodSixNet
 
 class MainMenu(widgets.Menu):
     def __init__(self, size=(640, 480), fill=(255, 255, 255)):
