@@ -20,11 +20,11 @@ class GameOverMenu(widgets.Menu):
         self.addOptionCallback("Main menu", self.back, count=2)
         self.addOptionCallback("Quit", self.quit)
 
-        self.p1Score = widgets.TextDisp(10, 10, "Player 1: " + str(scores[0]),
-                                        fontsize=15)
+        self.p1Score = widgets.TextDisp(10, 10, "Player 1: " + str(scores[0]))
         self.p2Score = widgets.TextDisp(self.size[0] - 150, 10,
-                                        "Player 2: " + str(scores[1]),
-                                        fontsize=15)
+                                        "Player 2: " + str(scores[1]))
+        self.p1Score.setFont(fontsize=15)
+        self.p2Score.setFont(fontsize=15)
 
     def draw(self):
         super(GameOverMenu, self).draw()

@@ -23,16 +23,14 @@ class GameState(object):
 
 class Game(widgets.Module):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
-        bgColor = widgets.Setting.attr("bg", str(fill))
-        self._initBackground()
-
-        super(Game, self).__init__(parent, size, self.bgColor)
+        super(Game, self).__init__(parent, size)
 
         self.gameState = GameState.TIMER
         self.timer = 3
         self.millis = 1000
         self.timerDisp = widgets.TextDisp(self.size[0] / 2,
                                           self.size[1] / 2, str(self.timer))
+        self.timerDisp.setFont(color=self.color)
 
         self._initPlayers()
 
@@ -44,12 +42,6 @@ class Game(widgets.Module):
         self.addEventCallback((KEYUP, (K_a, K_d)), self._p2DirKeyup)
 
         self.addEventCallback((KEYDOWN, K_SPACE), self._pauseMenu)
-
-    def _initBackground(self):
-        bgColorStr = widgets.Setting.attr("bg", "(255, 255, 255)")
-        bgChannels = [int(i) for i in bgColorStr.strip()[1:-1].split(",")]
-
-        self.bgColor = tuple(bgChannels)
 
     def _initPlayers(self):
         p1ColorStr = widgets.Setting.attr("p1", "(50, 100, 12)")

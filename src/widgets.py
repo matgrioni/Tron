@@ -36,7 +36,8 @@ from pygame.locals import *
 # is being called for the events.
 ###########################################################
 class Module(object):
-    def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
+    def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255),
+                 color=(0, 0, 0)):
         # This is only included so that when widget classes that extend this
         # can easily extend the constructor while using multiple inheritance
         super(Module, self).__init__()
@@ -48,18 +49,22 @@ class Module(object):
             pygame.init()
             self.size = size
             self.screen = pygame.display.set_mode(size)
+
+            self.fill = fill
+            self.color = color
         else:
             self.screen = parent.screen
             self.size = (self.screen.get_width(), self.screen.get_height())
 
+            self.fill = parent.fill
+            self.color = parent.color
+
         self.parent = parent
 
-        self.fill = fill
         self.running = False
         self.clock = pygame.time.Clock()
-
-        self.millis = 0
         self.fps = 0
+        self.millis = 0
 
         # Create the dictionaries that bind an event to a user
         # defined callback. Each event has one possible callback
@@ -69,6 +74,7 @@ class Module(object):
 
         self.addEventCallback((KEYDOWN, K_ESCAPE), self.back)
         self.addEventCallback((QUIT, None), self.quit)
+
 
     # Similar to init except it keeps all the callbacks the same.
     # Equivalent to the state of the module before update was ever
@@ -297,14 +303,19 @@ class Setting(object):
 # in desired position.
 ###########################################################
 class TextDisp(object):
-    def __init__(self, x, y, text="", font="monospace", fontsize=20):
+    def __init__(self, x, y, text=""):
         self.x, self.y = x, y
         self.text = text
 
+        self.font = pygame.font.SysFont("monospace", 20)
+        self.color = (0, 0, 0)
+
+    def setFont(self, font="monospace", fontsize=20, color=(0, 0, 0)):
         self.font = pygame.font.SysFont(font, fontsize)
+        self.color = color
 
     def draw(self, screen):
-        surface = self.font.render(self.text, False, (0, 0, 0))
+        surface = self.font.render(self.text, False, self.color)
         screen.blit(surface, (self.x, self.y))
 
 ###########################################################
@@ -316,37 +327,48 @@ class TextDisp(object):
 # should be tweaked in the future.
 ###########################################################
 class SettingInput(Module, Setting):
-    def __init__(self, query, parent=None,
-                 size=(640, 480), fill=(255, 255, 255)):
-        super(SettingInput, self).__init__(parent, size, fill)
+    def __init__(self, query, desc="", parent=None, size=(640, 480),
+                 fill=(255, 255, 255), color=(0, 0, 0)):
+        super(SettingInput, self).__init__(parent, size, fill, color)
         self.printable = [p for p in string.printable \
                           if p not in string.whitespace or p == " "]
-        self.x = size[0] / 2 - 200
+        self.x = 75
         self.y = 100
 
         self.entry = ""
         self.query = query
-        self.font = pygame.font.SysFont("monospace", 20)
 
-        self.errorMsg = TextDisp(0, 0)
+        self.descMsg = TextDisp(0, 0, desc)
+        self.errorMsg = TextDisp(0, size[1] - 150)
 
+        self.descMsg.setFont(color=self.color)
+        self.errorMsg.setFont(color=self.color)
+
+        # Set the default pygame event actions for all SettingInput
+        # objects.
         self.addEventCallback((KEYDOWN, None), self._addEventChar)
         self.addEventCallback((KEYDOWN, K_RETURN), self._finish)
         self.addEventCallback((KEYDOWN, K_BACKSPACE), self._backspace)
 
-    def setup(self, key, regex):
+    # This inherits from Setting which will set the key value for this
+    # SettingInput and also the regex to check the input against
+    def setup(self, key, regex=""):
         super(SettingInput, self).setup(key, regex)
         self.entry = self.load("")
 
-    def setFont(self, font="monospace", fontsize=20):
+    # Set the font attributes for the entire screen / module
+    def setFont(self, font="monospace", fontsize=20, color=(0, 0, 0)):
         self.font = pygame.font.SysFont(font, fontsize)
+        self.color = color
 
+    # Draws the query, current input, and error message if necessary
     def draw(self):
         self.screen.fill(self.fill)
 
-        fSurface = self.font.render(self.query + self.entry, False, (0, 0, 0))
+        fSurface = self.font.render(self.query + self.entry, False, self.color)
         self.screen.blit(fSurface, (self.x, self.y))
         
+        self.descMsg.draw(self.screen)
         self.errorMsg.draw(self.screen)
 
     def _backspace(self, e):
@@ -358,6 +380,8 @@ class SettingInput(Module, Setting):
 
     def _finish(self, e):
         if self.regex != "":
+            # If input has to be validated, validate it and save if
+            # valid or display error message otherwise.
             if self.check(self.entry):
                 self.save(self.entry)
                 self.back()
@@ -378,13 +402,14 @@ class SettingInput(Module, Setting):
 # all the menus that will be used in the program.
 ###########################################################
 class Menu(Module):
-    def __init__(self, options, parent=None, size=(640, 480), fill=(255, 255, 255)):
-        super(Menu, self).__init__(parent, size, fill)
+    def __init__(self, options, parent=None, size=(640, 480),
+                 fill=(255, 255, 255), color=(0, 0, 0)):
+        super(Menu, self).__init__(parent, size, fill, color)
 
         self.selectedItem = 0
 
         # Create a list of surfaces for the provided options
-        self.font = pygame.font.SysFont("monospace", 20)
+        self.setFont(color=self.color)
         self.setOptions(options)
 
         self.optionCallbacks = {}
@@ -393,6 +418,11 @@ class Menu(Module):
         self.addEventCallback((KEYDOWN, K_UP), self._moveSelectedUp)
         self.addEventCallback((KEYDOWN, K_DOWN), self._moveSelectedDown)
         self.addEventCallback((KEYDOWN, K_RETURN), self._selectItem)
+
+    # Set the font attributes for the entire screen / module
+    def setFont(self, font="monospace", fontsize=20, color=(0, 0, 0)):
+        self.font = pygame.font.SysFont(font, fontsize)
+        self.color = color
 
     # Option callbacks are called when the user selects an
     # option from the menu with the enter key. Provide
@@ -410,7 +440,7 @@ class Menu(Module):
     # than setting self.options automatically.
     def setOptions(self, options):
         self.options = options
-        self.renderedOptions = [self.font.render(option, False, (0, 0, 0)) \
+        self.renderedOptions = [self.font.render(option, False, self.color) \
                                 for option in options]
         self.maxWidth = max([o.get_width() for o in self.renderedOptions])
 
@@ -430,7 +460,7 @@ class Menu(Module):
                 topPoint = (sidePoint[0] - 10, sidePoint[1] - 5)
                 botPoint = (sidePoint[0] - 10, sidePoint[1] + 5)
 
-                pygame.draw.polygon(self.screen, (0, 0, 0),
+                pygame.draw.polygon(self.screen, self.color,
                                     [sidePoint, topPoint, botPoint])
 
     # Changes the selected item to one higher if possible
