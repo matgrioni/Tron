@@ -7,27 +7,36 @@
 # A menu of the possible settings for the game.
 ###########################################################
 
-import widgets
+import modules
+import settings
 
-class SettingsMenu(widgets.Menu):
-    def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
+class SettingsMenu(modules.Menu):
+    COLOR_REGEX = "\\(\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\)"
+
+    def __init__(self, parent=None):
+        super(SettingsMenu, self).__init__(parent)
         options = ["Player 1 Color", "Player 2 Color", "Text Color",
                    "Background Color", "Back"]
-        super(SettingsMenu, self).__init__(options, parent, size, fill)
+        self.setOptions(options)
 
-        self.addOptionCallback("Player 1 Color", self._saveColor,
+        self.addOptionCallback("Player 1 Color", self._inputColor,
                                "p1", "Enter color of Player 1 as (r, g, b)")
-        self.addOptionCallback("Player 2 Color", self._saveColor,
+        self.addOptionCallback("Player 2 Color", self._inputColor,
                                "p2", "Enter color of Player 2 as (r, g, b)")
-        self.addOptionCallback("Text Color", self._saveColor,
+        self.addOptionCallback("Text Color", self._inputColor,
                                "txt", "Enter color of text as (r, g, b)")
-        self.addOptionCallback("Background Color", self._saveColor,
+        self.addOptionCallback("Background Color", self._inputColor,
                                "bg", "Enter color of game screen as (r, g, b)")
         self.addOptionCallback("Back", self.back)
 
-    def _saveColor(self, key, desc):
-        inputBox = widgets.SettingInput("Color: ", desc, parent=self)
-        inputBox.setFont("monospace", 15)
-        inputBox.setup(key, "\\(\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\)")
+    # Input the color for the described setting key
+    def _inputColor(self, key, desc):
+        # Setup the text input for the color with the setting key for the file
+        # the regex for checking the input as a triplet, and the desc of the
+        # input.
+        colorInput = settings.SettingInput(parent=self)
+        colorInput.setting(key, SettingsMenu.COLOR_REGEX)
+        colorInput.setup(desc)
+        colorInput.setQuery("Color: ")
 
-        inputBox.execute(self.fps)
+        colorInput.execute(self.fps)

@@ -12,6 +12,9 @@
 import pygame
 
 import widgets
+import modules
+import settings
+
 from pygame.locals import *
 from LineRider import Direction, LineRider
 from PauseMenu import PauseMenu
@@ -21,7 +24,7 @@ from GameOverMenu import GameOverMenu
 class GameState(object):
     PLAYING, PAUSE, GAMEOVER, TIMER = range(4)
 
-class Game(widgets.Module):
+class Game(modules.Module):
     def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
         super(Game, self).__init__(parent, size)
 
@@ -44,8 +47,8 @@ class Game(widgets.Module):
         self.addEventCallback((KEYDOWN, K_SPACE), self._pauseMenu)
 
     def _initPlayers(self):
-        p1ColorStr = widgets.Setting.attr("p1", "(50, 100, 12)")
-        p2ColorStr = widgets.Setting.attr("p2", "(0, 0, 0)")
+        p1ColorStr = settings.Settings.load("p1", "(50, 100, 12)")
+        p2ColorStr = settings.Settings.load("p2", "(0, 0, 0)")
 
         p1Channels = [int(i) for i in p1ColorStr.strip()[1:-1].split(",")]
         p2Channels = [int(i) for i in p2ColorStr.strip()[1:-1].split(",")]
@@ -70,12 +73,12 @@ class Game(widgets.Module):
         self.gameState = GameState.TIMER
         self.timer = 3
         self.millis = 1000
-        self.timerDisp.text = str(self.timer)
+        self.timerDisp.setText(str(self.timer))
 
     # Simply move each player along as needed
     def update(self):
         if self.gameState == GameState.TIMER:
-            self.timerDisp.text = str(self.timer)
+            self.timerDisp.setText(str(self.timer))
             self.timer -= 1
 
             if self.timer < 0:
@@ -94,15 +97,15 @@ class Game(widgets.Module):
                 if not alive[0]:
                     self.gameState = GameState.GAMEOVER
                     self.p2.score += 1
-                    self.p2Score.text = str(self.p2.score)
+                    self.p2Score.setText(str(self.p2.score))
 
                 if not alive[1]:
                     self.gameState = GameState.GAMEOVER
                     self.p1.score += 1
-                    self.p1Score.text = str(self.p1.score)
+                    self.p1Score.setText(str(self.p1.score))
 
-                gameOver = GameOverMenu([self.p1.score, self.p2.score],
-                                        parent=self)
+                gameOver = GameOverMenu(parent=self)
+                gameOver.setScores([self.p1.score, self.p2.score])
                 gameOver.execute(self.fps)
 
     def draw(self):
@@ -144,6 +147,6 @@ class Game(widgets.Module):
     # Create the pause menu with the current game screen as
     # the parent.
     def _pauseMenu(self, event):
-        pauseMenu = PauseMenu([self.p1.score, self.p2.score], self,
-                              fill=(255, 255, 255))
+        pauseMenu = PauseMenu(self, fill=(255, 255, 255))
+        pauseMenu.setScores([self.p1.score, self.p2.score])
         pauseMenu.execute(self.fps)
