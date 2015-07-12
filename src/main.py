@@ -9,8 +9,7 @@
 # option selections.
 ###########################################################
 
-import modules
-import settings
+from pydroid import modules, settings
 
 from SettingsMenu import SettingsMenu
 from Game import Game
@@ -20,15 +19,16 @@ class MainMenu(modules.Menu):
     def __init__(self, size=(640, 480), fill=(255, 255, 255)):
         # Load the colors for the text and background which will
         # be used throughout the game.
-        self._initColors()
+        
+        # Not using this for now until theming is more established.
+        # self._initColors()
 
         # No parent, this is the parent PygameHelper module
-        super(MainMenu, self).__init__(color=self.color, fill=self.fill,
-                                       size=size)
+        super(MainMenu, self).__init__(fill=fill, size=size)
         self.setOptions(["Local", "Network", "Settings", "Quit"])
 
         self.addOptionCallback("Local", self._startGame)
-        self.addOptionCallback("Settings", self._settingsMenu)
+        # self.addOptionCallback("Settings", self._settingsMenu)
         self.addOptionCallback("Quit", self.quit)
 
     # Run this to set the background and text colors for this module

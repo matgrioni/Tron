@@ -11,9 +11,7 @@
 
 import pygame
 
-import widgets
-import modules
-import settings
+from pydroid import modules, widgets, settings
 
 from pygame.locals import *
 from LineRider import Direction, LineRider
@@ -25,15 +23,15 @@ class GameState(object):
     PLAYING, PAUSE, GAMEOVER, TIMER = range(4)
 
 class Game(modules.Module):
-    def __init__(self, parent=None, size=(640, 480), fill=(255, 255, 255)):
-        super(Game, self).__init__(parent, size)
+    def __init__(self, parent, fill=(255, 255, 255)):
+        super(Game, self).__init__(parent, fill)
 
         self.gameState = GameState.TIMER
         self.timer = 3
         self.millis = 1000
         self.timerDisp = widgets.TextDisp(self.size[0] / 2,
                                           self.size[1] / 2, str(self.timer))
-        self.timerDisp.setFont(color=self.color)
+        self.timerDisp.setFont(color=(0, 0, 0))
 
         self._initPlayers()
 

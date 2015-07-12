@@ -8,13 +8,11 @@
 # dies. Similar to the pause menu however no resume option.
 ###########################################################
 
-import modules
-import widgets
+from pydroid import modules, settings, widgets
 
 class GameOverMenu(modules.Menu):
-    def __init__(self, parent=None, size=(640, 480),
-                 fill=(255, 255, 255)):
-        super(GameOverMenu, self).__init__(parent, fill=fill, size=size)
+    def __init__(self, parent, fill=(255, 255, 255)):
+        super(GameOverMenu, self).__init__(parent, fill)
         self.setOptions(["Next game", "Main menu", "Quit"])
 
         self.addOptionCallback("Next game", self._startGameOver)

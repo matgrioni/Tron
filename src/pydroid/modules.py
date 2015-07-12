@@ -11,9 +11,12 @@
 ###########################################################
 
 import pygame
+from pygame.locals import *
+
 import sys
 import string, re
-from pygame.locals import *
+
+import widgets
 
 ###########################################################
 # Author: Matias Grioni
@@ -42,8 +45,7 @@ from pygame.locals import *
 # therefore the prior module will resume execution.
 ###########################################################
 class Module(object):
-    def __init__(self, parent=None, color=(0, 0, 0), fill=(255, 255, 255),
-                 size=(640, 480)):
+    def __init__(self, parent=None, fill=(255, 255, 255), size=(640, 480)):
         # This is only included so that when widget classes that extend this
         # can easily extend the constructor while using multiple inheritance
         super(Module, self).__init__()
@@ -55,17 +57,13 @@ class Module(object):
             pygame.init()
             self.size = size
             self.screen = pygame.display.set_mode(size)
-
-            self.fill = fill
-            self.color = color
         else:
             self.screen = parent.screen
             self.size = (self.screen.get_width(), self.screen.get_height())
 
-            self.fill = parent.fill
-            self.color = parent.color
 
         self.parent = parent
+        self.fill = fill
 
         self.running = False
         self.clock = pygame.time.Clock()
@@ -80,7 +78,6 @@ class Module(object):
 
         self.addEventCallback((KEYDOWN, K_ESCAPE), self.back)
         self.addEventCallback((QUIT, None), self.quit)
-
 
     # Similar to init except it keeps all the callbacks the same.
     # Equivalent to the state of the module before update was ever
@@ -246,24 +243,19 @@ class Module(object):
 # all the menus that will be used in the program.
 ###########################################################
 class Menu(Module):
-    def __init__(self, parent=None, color=(0, 0, 0), fill=(255, 255, 255),
-                 size=(640, 480)):
-        super(Menu, self).__init__(parent, color, fill, size)
+    def __init__(self, parent=None, fill=(255, 255, 255), size=(640, 480)):
+        super(Menu, self).__init__(parent, fill, size)
 
         # Initialize local variables for the menu
         self.selectedItem = 0
         self.optionCallbacks = {}
-        self.setFont(color=self.color)
+
+        self.textdisps = []
 
         # Define the default keyboard events for menu navigation
         self.addEventCallback((KEYDOWN, K_UP), self._moveSelectedUp)
         self.addEventCallback((KEYDOWN, K_DOWN), self._moveSelectedDown)
         self.addEventCallback((KEYDOWN, K_RETURN), self._selectItem)
-
-    # Set the font attributes for the entire screen / module
-    def setFont(self, font="monospace", fontsize=20, color=(0, 0, 0)):
-        self.font = pygame.font.SysFont(font, fontsize)
-        self.color = color
 
     # Option callbacks are called when the user selects an
     # option from the menu with the enter key. Provide
@@ -281,27 +273,31 @@ class Menu(Module):
     # than setting self.options automatically.
     def setOptions(self, options):
         self.options = options
-        self.renderedOptions = [self.font.render(option, False, self.color) \
-                                for option in options]
-        self.maxWidth = max([o.get_width() for o in self.renderedOptions])
+        del self.textdisps[:]
+        
+        for (i, option) in enumerate(options):
+            if i == 0:
+                self.textdisps.append(widgets.TextDisp(30, 30, option))
+            else:
+                prior = self.textdisps[i - 1]
+                newY = prior.y + prior.height + 10
+
+                self.textdisps.append(widgets.TextDisp(30, newY, option))
 
     # Draw the text and the appropriate selector shape
     def draw(self):
         self.screen.fill(self.fill)
 
-        for (i, option) in enumerate(self.renderedOptions):
-            # Draw the menu items
-            x = (self.size[0] - option.get_width()) / 2
-            y = 100 + i * option.get_height()
-            self.screen.blit(option, (x, y))
+        for (i, textdisp) in enumerate(self.textdisps):
+            textdisp.draw(self.screen)
 
+            # Draw the triangle indicator
             if i == self.selectedItem:
-                sidePoint = ((self.size[0] - self.maxWidth) / 2 - 20,
-                             y + option.get_height() / 2)
+                sidePoint = (20, textdisp.y + textdisp.height / 2)
                 topPoint = (sidePoint[0] - 10, sidePoint[1] - 5)
                 botPoint = (sidePoint[0] - 10, sidePoint[1] + 5)
 
-                pygame.draw.polygon(self.screen, self.color,
+                pygame.draw.polygon(self.screen, (0, 0, 0),
                                     [sidePoint, topPoint, botPoint])
 
     # Changes the selected item to one higher if possible

@@ -8,13 +8,11 @@
 # library.
 ###########################################################
 
-import modules
-import widgets
+from pydroid import modules, widgets
 
 class PauseMenu(modules.Menu):
-    def __init__(self, parent=None, color=(0, 0, 0), fill=(255, 255, 255),
-                 size=(640, 480)):
-        super(PauseMenu, self).__init__(parent, size=size, fill=fill)
+    def __init__(self, parent, fill=(255, 255, 255)):
+        super(PauseMenu, self).__init__(parent, fill)
         self.setOptions(["Resume", "Start over", "Main menu", "Quit"])
 
         self.addOptionCallback("Resume", self._resumeGame)
@@ -29,11 +27,10 @@ class PauseMenu(modules.Menu):
         self.p2Score = widgets.TextDisp(self.size[0] - 150, 10)
         self.p2Score.setFont(fontsize=15)
 
-    # Set the text for the scores in the two corners. The score for player 1
-    # should be scores[0], and for player 2, scores[1]
-    def setScores(self, scores):
-        self.p1Score.setText("Player 1: " + str(scores[0]))
-        self.p2Score.setText("Player 2: " + str(scores[1]))
+    # Set the text for the scores in the two corners.
+    def setScores(self, p1Score, p2Score):
+        self.p1Score.setText("Player 1: " + str(p1Score))
+        self.p2Score.setText("Player 2: " + str(p2Score))
 
     def draw(self):
         super(PauseMenu, self).draw()

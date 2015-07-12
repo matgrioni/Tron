@@ -7,17 +7,15 @@
 # A menu of the possible settings for the game.
 ###########################################################
 
-import modules
-import settings
+from pydroid import modules, settings
 
 class SettingsMenu(modules.Menu):
     COLOR_REGEX = "\\(\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\)"
 
-    def __init__(self, parent=None):
-        super(SettingsMenu, self).__init__(parent)
-        options = ["Player 1 Color", "Player 2 Color", "Text Color",
-                   "Background Color", "Back"]
-        self.setOptions(options)
+    def __init__(self, parent, fill=(255, 255, 255)):
+        super(SettingsMenu, self).__init__(parent, fill)
+        self.setOptions(["Player 1 Color", "Player 2 Color", "Text Color",
+                         "Background Color", "Back"])
 
         self.addOptionCallback("Player 1 Color", self._inputColor,
                                "p1", "Enter color of Player 1 as (r, g, b)")

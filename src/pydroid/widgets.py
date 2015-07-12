@@ -11,16 +11,27 @@ import pygame
 
 ###########################################################
 # Author: Matias Grioni
+# Created: 7/12/15
+#
+# A base class for widgets. Includes fields such size,
+# position, focus and background color.
+###########################################################
+class Widget(object):
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+
+###########################################################
+# Author: Matias Grioni
 # Created: 6/21/15
 #
 # Widget to display any arbitrary text in position (x, y)
 # on a pygame surface with customizable font.
 ###########################################################
-class TextDisp(object):
+class TextDisp(Widget):
     # Creates a TextDisp at the provided coordinates displaying provided text.
     # The font is monospace, size 20, and black by default
     def __init__(self, x, y, text=""):
-        self.x, self.y = x, y
+        super(TextDisp, self).__init__(x, y)
 
         self.setFont("monospace", 20, (0, 0, 0))
         self.setText(text)
@@ -41,6 +52,8 @@ class TextDisp(object):
     # Recreates the text surface using the passed in text
     def setText(self, text):
         self.surface = self.font.render(text, False, self.color)
+        self.width = self.surface.get_width()
+        self.height = self.surface.get_height()
 
     # Draws the text at x, y on the provided surface
     def draw(self, screen):
