@@ -54,6 +54,8 @@ class LineRider(Player):
 
         del self.blocks[1:]
 
+    # Returns true if the player does not overlap itself, is in bounds, and
+    # does not collide with the other player. False otherwise.
     def checkAlive(self, player, bounds):
         self.alive = not self._collides(player) and self._inbounds(bounds) \
                      and not self._overlap()

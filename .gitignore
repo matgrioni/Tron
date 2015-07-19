@@ -3,3 +3,4 @@
 
 # Ignore temporary vim files
 *.swp
+*.*~

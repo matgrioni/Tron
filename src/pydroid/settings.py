@@ -9,8 +9,7 @@
 # would be able to be made.
 ###########################################################
 
-import modules
-import widgets
+import modules, views
 
 from pygame.locals import *
 import string
@@ -80,9 +79,8 @@ class SettingModule(modules.Module):
     # background color and window size. Note, if a parent is provided,
     # the size will be equal to the size of the parent regardless of the
     # value passed in.
-    def __init__(self, parent=None, color=(0, 0, 0), fill=(255, 255, 255),
-                 size=(640, 480)):
-        super(SettingModule, self).__init__(parent, color, fill, size)
+    def __init__(self, parent=None, fill=(255, 255, 255), size=(640, 480)):
+        super(SettingModule, self).__init__(parent, fill, size)
 
         # Variable to store the current value. Only strings for value.
         # Also initializes the TextDisp text to be used for the setting
@@ -90,12 +88,17 @@ class SettingModule(modules.Module):
         self.value = ""
         
         # Initialize the description and error messages for the SettingModule
-        self.desc = widgets.TextDisp(0, 0)
-        self.error = widgets.TextDisp(0, self.size[1] - 100)
+        self.desc = views.TextDisp(self, (0, 0))
+        self.error = views.TextDisp(self, (0, self.size[1] - 100))
         self.errorMsg = "Input not in proper format"
 
         self.desc.setFont(color=self.color)
         self.error.setFont(color=self.color)
+
+        container = views.ViewGroup(self, (0, 0), self.size)
+        container.children.append(self.desc)
+        container.children.append(self.error)
+        self.setView(container)
 
         self.addEventCallback((KEYDOWN, K_RETURN), self.save)
 
@@ -119,14 +122,6 @@ class SettingModule(modules.Module):
 
         if error is not None:
             self.errorMsg = error
-
-    # Draws the description and error messages. This already fills every loop
-    # so children of SettingModule do not need to call screen.fill only draw
-    # what they need displayed.
-    def draw(self):
-        self.screen.fill(self.fill)
-        self.desc.draw(self.screen)
-        self.error.draw(self.screen)
 
     # Saves the current value with the provided key if the input matches
     # the regex, or if there is no regex it auomatically saves the values.
@@ -167,7 +162,8 @@ class SettingInput(SettingModule):
         self.y = 100
 
         self.query = ""
-        self.disp = widgets.TextDisp(self.x, self.y)
+        self.disp = views.TextDisp(self, (self.x, self.y))
+        self.children.append(self.disp)
 
         # Set the default pygame event actions for all SettingInput
         # objects.

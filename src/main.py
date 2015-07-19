@@ -9,14 +9,14 @@
 # option selections.
 ###########################################################
 
-from pydroid import modules, settings
+from pydroid import modules, settings, views
 
 from SettingsMenu import SettingsMenu
-from Game import Game
+from GameModule import GameModule
 import PodSixNet
 
-class MainMenu(modules.Menu):
-    def __init__(self, size=(640, 480), fill=(255, 255, 255)):
+class MainMenu(modules.Module):
+    def __init__(self, fill=(255, 255, 255), size=(640, 480)):
         # Load the colors for the text and background which will
         # be used throughout the game.
         
@@ -25,11 +25,15 @@ class MainMenu(modules.Menu):
 
         # No parent, this is the parent PygameHelper module
         super(MainMenu, self).__init__(fill=fill, size=size)
-        self.setOptions(["Local", "Network", "Settings", "Quit"])
 
-        self.addOptionCallback("Local", self._startGame)
+        self.menu = views.Menu(self, (0, 0), self.size)
+        self.menu.setOptions(["Local", "Network", "Settings", "Quit"])
+
+        self.menu.addOptionCallback("Local", self._startGame)
         # self.addOptionCallback("Settings", self._settingsMenu)
-        self.addOptionCallback("Quit", self.quit)
+        self.menu.addOptionCallback("Quit", self.quit)
+
+        self.setView(self.menu)
 
     # Run this to set the background and text colors for this module
     def _initColors(self):
@@ -43,14 +47,14 @@ class MainMenu(modules.Menu):
         self.color = tuple(fontChannels)
 
     def _startGame(self):
-        g = Game(parent=self)
-        g.execute(self.fps)
+        g = GameModule(self)
+        g.execute()
 
     def _settingsMenu(self):
-        settings = SettingsMenu(parent=self)
-        settings.execute(self.fps)
+        settings = SettingsMenu(self)
+        settings.execute()
 
 if __name__ == "__main__":
     menu = MainMenu()
     menu.title("Tron")
-    menu.execute(50)
+    menu.execute()
