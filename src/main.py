@@ -13,7 +13,6 @@ from pydroid import modules, settings, views
 
 from SettingsMenu import SettingsMenu
 from GameModule import GameModule
-import PodSixNet
 
 class MainMenu(modules.Module):
     def __init__(self, fill=(255, 255, 255), size=(640, 480)):
