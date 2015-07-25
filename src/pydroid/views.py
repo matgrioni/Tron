@@ -28,9 +28,9 @@ class View(utils.EventHandler):
 
         self.x, self.y = pos[0], pos[1]
         self.size = size
-        self.width, self.height = size[0], size[1]
 
         self.background = (255, 255, 255)
+        self.visible = True
 
     def reset(self):
         pass
@@ -40,14 +40,16 @@ class View(utils.EventHandler):
 
     # Handles basic drawing behavior such as background color
     def draw(self):
-        bounds = (self.x, self.y, self.x + self.width, self.y + self.height)
-        pygame.draw.rect(self.screen, self.background, bounds)
+        if not self.visible:
+            bounds = (self.x, self.y, self.size[0], self.size[1])
+            pygame.draw.rect(self.screen, self.background, bounds)
 
 ######################################################################
 # Author: Matias Grioni
 # Created: 7/14/15
 #
-# A container for multiple different views.
+# A container for multiple different views. Add views by accessing
+# the children member variable, and calling .append()
 ######################################################################
 class ViewGroup(View):
     def __init__(self, module, pos, size=(0, 0)):
@@ -102,8 +104,7 @@ class TextDisp(View):
     # Recreates the text surface using the passed in text
     def setText(self, text):
         self.surface = self.font.render(text, False, self.color)
-        self.width = self.surface.get_width()
-        self.height = self.surface.get_height()
+        self.size = (self.surface.get_width(), self.surface.get_height())
 
     # Draws the text at x, y on the provided surface
     def draw(self):
@@ -169,7 +170,7 @@ class Menu(View):
                 self.textdisps.append(TextDisp(self.module, (30, 30), option))
             else:
                 prior = self.textdisps[i - 1]
-                newY = prior.y + prior.height + 10
+                newY = prior.y + prior.size[1] + 10
 
                 self.textdisps.append(TextDisp(self.module, (30, newY), option))
 
@@ -182,7 +183,7 @@ class Menu(View):
 
             # Draw the triangle indicator
             if i == self.selectedItem:
-                sidePoint = (20, textdisp.y + textdisp.height / 2)
+                sidePoint = (20, textdisp.y + textdisp.size[1] / 2)
                 topPoint = (sidePoint[0] - 10, sidePoint[1] - 5)
                 botPoint = (sidePoint[0] - 10, sidePoint[1] + 5)
 
@@ -210,59 +211,3 @@ class Menu(View):
             kwargs = self.optionCallbacks[option][2]
 
             callback(*args, **kwargs)
-
-######################################################################
-# Author: Matias Grioni
-# Created: 7/18/15
-#
-# A Timer display view. This is not defined in views, because it does
-# not follow the typical execution flow, of update, draw, handle
-# events, repeat, etc.
-#
-# TODO: It must control its own flow and therefore it doesn't make
-# sense to have it in views. Either should be defined elsewhere, or
-# it should have slightly different behavior.
-#
-# Allows a user to stop execution and display a countdown timer from a
-# provided value. To use, create the object and set the time. Then
-# once created, use .execute() and the timer will begin. Unfortunately
-# when execute is called it will lock all other process and it does
-# not run asynchronously.
-#
-# Updates in increments of 1 second.
-######################################################################
-class Timer(TextDisp):
-    # The desc provided here can act as a descriptor. For example
-    # setting the time at 5 seconds and the text at until the output
-    # is Until: 5....Until: 4, etc.
-    def __init__(self, module, pos, desc=""):
-        super(Timer, self).__init__(module, pos, "")
-
-        # If the desc actually has content include a colon, otherwise don't
-        if desc == "":
-            self.desc = ""
-        else:
-            self.desc = desc + ": "
-
-        self.timer = 0
-
-    # Set the countdown time
-    def setTimer(self, timer):
-        self.timer = timer
-
-    # Run the countdown
-    def execute(self):
-        # Keep the timer variable constant just in case this needs to be
-        # run multiple times
-        tmp = self.timer
-        self.setText(self.desc + str(tmp))
-
-        # Run down the timer and then clear the timer text.
-        while tmp > 0:
-            self.draw()
-            pygame.display.flip()
-            pygame.time.delay(1000)
-            tmp -= 1
-            self.setText(self.desc + str(tmp))
-
-        self.setText("")
