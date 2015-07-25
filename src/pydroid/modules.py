@@ -5,7 +5,7 @@
 # Created: 6/14/15
 #
 # Module that contains all the widgets for the program.
-# The idea is that for all the necessary widgets, inputs,
+# The idea is that for all the necessary views, inputs,
 # displays and screens of the program. Some widget can be
 # extended and used.
 ###########################################################
@@ -43,6 +43,10 @@ import string, re
 # each other. The quit function will quit the entire game
 # when called and back will stop the current module and
 # therefore the prior module will resume execution.
+#
+# TODO: Implement an activity lifecycle, so that way when
+# transitioning between activities, there are always certain
+# methods which are called before the execution of a module.
 ###########################################################
 class Module(utils.EventHandler):
     def __init__(self, parent=None, fill=(255, 255, 255), size=(640, 480)):
@@ -67,7 +71,6 @@ class Module(utils.EventHandler):
         self.running = False
         self.clock = pygame.time.Clock()
         self.fps = 60
-        self.millis = 0
 
         # Create the dictionaries that bind an event to a user
         # defined callback. Each event has one possible callback
@@ -81,18 +84,15 @@ class Module(utils.EventHandler):
     def setView(self, view):
         self.view = view
 
-    def wait(self):
-        pygame.time.delay(self.millis)
-
     def title(self, s):
         pygame.display.set_caption(s)
 
     def reset(self):
-        self.screen.fill(self.fill)
-        
-        self.fps = 60
-        self.millis = 0
+        # Force reset the screen
+        self.screen.fill(self.fill)       
+        pygame.display.flip()
 
+        self.fps = 60
         self.view.reset()
 
     # The following are base logic functions that are mostly bare here
@@ -122,7 +122,11 @@ class Module(utils.EventHandler):
     def execute(self):
         self.running = True
 
+        # Even if the module, isn't running, it should display the initial
+        # screen but not update its screen. This helps if there is a pause
+        # in execution.
         self.screen.fill(self.fill)
+        self.draw()
         pygame.display.flip()
 
         # Accept input and update the screen, 
@@ -133,11 +137,15 @@ class Module(utils.EventHandler):
             pygame.display.flip()
 
             self.clock.tick(self.fps)
-            self.wait()
 
         # For when the loop is over, if it's transitioning
-        # to a new screen we want to clear it before then
+        # to a new screen we want to clear it before then, and then draw
+        # the next screen so that it starts off with a clean slate.
+        # Mostly, for timing purposes though, in the future, an activity
+        # lifecycle should be implemented.
         self.screen.fill(self.fill)
+        if self.parent is not None:
+            self.parent.draw()
         pygame.display.flip()
 
     # Moves up through the module stack back times. If the

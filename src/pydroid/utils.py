@@ -9,6 +9,7 @@
 # found here.
 ######################################################################
 
+import pygame
 from pygame.locals import *
 
 ######################################################################
@@ -96,3 +97,31 @@ class EventHandler(object):
         kwargs = callback[2]
 
         func(e, *args, **kwargs)
+
+######################################################################
+# Author: Matias Grioni
+# Created: 7/18/15
+#
+# A countdown utility. Pass in a specified time in seconds to
+# countdown, and a provided callback will be called each second, and
+# another callback once the timer has finished. If no callbacks are
+# provided then it will merely stall the execution of the program, for
+# the specified time.
+######################################################################
+class Timer(object):
+    def __init__(self, s):
+        self.s = s
+
+        self.onTick = None
+        self.onFinish = None
+
+    # Start the synchronously countdown
+    def start(self):
+        tmp = self.s
+
+        while tmp > 0:
+            self.onTick(tmp)
+            tmp -= 1
+            pygame.time.delay(1000)
+
+        self.onFinish()

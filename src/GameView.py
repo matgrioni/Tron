@@ -15,7 +15,7 @@
 
 import pygame
 
-from pydroid import modules, views, settings
+from pydroid import modules, views, settings, utils
 
 from pygame.locals import *
 from LineRider import Direction, LineRider
@@ -43,20 +43,25 @@ class GameView(views.ViewGroup):
         # Make the game fullscreen
         super(GameView, self).__init__(module, (0, 0), module.size)
 
-        # Start the game by displaying a timer.
+        self._initPlayers()
+        self._initEventCallbacks()
+
+        # Start the game by displaying a timer, which is created right below.
         self.gameState = GameState.TIMER
+
+        self.timer = utils.Timer(3)
+        self.timer.onTick = self._timerTick
+        self.timer.onFinish = self._timerFinish
 
         # Setup the children views for this viewgroup
         self.p1Score = views.TextDisp(module, (10, 10), "0")
         self.p2Score = views.TextDisp(module, (self.size[0] - 20, 10), "0")
-        self.timer = views.Timer(module, (self.size[0] / 2, self.size[1] / 2))
-        self.timer.setTimer(3)
+        self.timerDisp = views.TextDisp(module,
+                                       (self.size[0] / 2, self.size[1] / 2))
 
         self.children.append(self.p1Score)
         self.children.append(self.p2Score)
-
-        self._initPlayers()
-        self._initEventCallbacks()
+        self.children.append(self.timerDisp)
 
     # Setup the players with the saved colors and also setup the views that
     # display the appropriate scores in the corner.
@@ -72,9 +77,9 @@ class GameView(views.ViewGroup):
 
         # Then setup the colors
         p1Color, p2Color = tuple(p1Channels), tuple(p2Channels)
-        self.p1 = LineRider(10, self.size[1] / 2,
-                            Direction.RIGHT, color=p1Color)
-        self.p2 = LineRider(self.size[0] - 15, self.size[1] / 2,
+        self.p1 = LineRider(0, self.size[1] / 2, Direction.RIGHT,
+                            color=p1Color)
+        self.p2 = LineRider(self.size[0] - 10, self.size[1] / 2,
                             Direction.LEFT, color=p2Color)
 
     # Set up the callbacks for this view. Such as the arrows to move the player
@@ -94,13 +99,16 @@ class GameView(views.ViewGroup):
         self.p1.reset()
         self.p2.reset()
 
+        self.p1Score.setText("0")
+        self.p2Score.setText("0")
+
         self.gameState = GameState.TIMER
 
     # Simply move each player along as needed or update the timer depending
     # on the current game mode.
     def update(self):
         if self.gameState == GameState.TIMER:
-            self.timer.execute()
+            self.timer.start()
             self.gameState = GameState.PLAYING
         elif self.gameState == GameState.PLAYING:
             self.p1.update()
@@ -108,7 +116,6 @@ class GameView(views.ViewGroup):
 
             # Bounds of the screen
             bounds = (0, 0, self.size[0], self.size[1])
-
             alive = (self.p1.checkAlive(self.p2, bounds),
                      self.p2.checkAlive(self.p1, bounds))
 
@@ -135,10 +142,19 @@ class GameView(views.ViewGroup):
     def draw(self):
         super(GameView, self).draw()
 
-        # Keep drawing the players so that the menu is more
-        # like a translucent overlay
         self.p1.draw(self.screen)
         self.p2.draw(self.screen)
+
+    # Change the text on the countdown timer, and then force it to be redrawn
+    def _timerTick(self, t):
+        self.timerDisp.setText(str(t))
+        self.timerDisp.draw()
+        pygame.display.flip()
+
+    def _timerFinish(self):
+        self.timerDisp.setText("")
+        self.timerDisp.draw()
+        pygame.display.flip()
 
     def _pause(self, e):
         # Once the update loop is reached again start a timer
