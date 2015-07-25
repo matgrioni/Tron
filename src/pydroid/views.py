@@ -40,7 +40,7 @@ class View(utils.EventHandler):
 
     # Handles basic drawing behavior such as background color
     def draw(self):
-        if not self.visible:
+        if self.visible:
             bounds = (self.x, self.y, self.size[0], self.size[1])
             pygame.draw.rect(self.screen, self.background, bounds)
 
