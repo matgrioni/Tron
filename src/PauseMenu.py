@@ -27,7 +27,7 @@ class PauseMenu(modules.Module):
 
     # Initialize this modules menu view.
     def _initMenu(self):
-        self.menu = views.Menu(self, (0, 0), self.size)
+        self.menu = views.Menu(self, (0, 50), self.size)
         self.menu.setOptions(["Resume", "Start over", "Main menu", "Quit"])
 
         self.menu.addOptionCallback("Resume", self.back)

@@ -29,7 +29,7 @@ class GameOverMenu(modules.Module):
 
     # Create the menu child view.
     def _initMenu(self):
-        self.menu = views.Menu(self, (0, 100), self.size)
+        self.menu = views.Menu(self, (0, 50), self.size)
         self.menu.setOptions(["Next game", "Main menu", "Quit"])
 
         self.menu.addOptionCallback("Next game", self.back)

@@ -165,14 +165,19 @@ class Menu(View):
         self.options = options
         del self.textdisps[:]
         
+        # For each text option provided create the TextDisp for them.
         for (i, option) in enumerate(options):
+            # Accounts for variable heights
             if i == 0:
-                self.textdisps.append(TextDisp(self.module, (30, 30), option))
+                self.textdisps.append(TextDisp(self.module,
+                                      (self.x + 30, self.y), option))
             else:
+                # Set the next TextDisp 10 pixels below the prior one
                 prior = self.textdisps[i - 1]
                 newY = prior.y + prior.size[1] + 10
 
-                self.textdisps.append(TextDisp(self.module, (30, newY), option))
+                self.textdisps.append(TextDisp(self.module,
+                                      (self.x + 30, newY), option))
 
     # Draw the text and the appropriate selector shape
     def draw(self):
@@ -183,7 +188,7 @@ class Menu(View):
 
             # Draw the triangle indicator
             if i == self.selectedItem:
-                sidePoint = (20, textdisp.y + textdisp.size[1] / 2)
+                sidePoint = (self.x + 20, textdisp.y + textdisp.size[1] / 2)
                 topPoint = (sidePoint[0] - 10, sidePoint[1] - 5)
                 botPoint = (sidePoint[0] - 10, sidePoint[1] + 5)
 
