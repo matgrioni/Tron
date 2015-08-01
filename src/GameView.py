@@ -79,7 +79,7 @@ class GameView(views.ViewGroup):
         p1Color, p2Color = tuple(p1Channels), tuple(p2Channels)
         self.p1 = LineRider(0, self.size[1] / 2, Direction.RIGHT,
                             color=p1Color)
-        self.p2 = LineRider(self.size[0] - 10, self.size[1] / 2,
+        self.p2 = LineRider(self.size[0] - 5, self.size[1] / 2,
                             Direction.LEFT, color=p2Color)
 
     # Set up the callbacks for this view. Such as the arrows to move the player
