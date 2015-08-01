@@ -99,9 +99,6 @@ class GameView(views.ViewGroup):
         self.p1.reset()
         self.p2.reset()
 
-        self.p1Score.setText("0")
-        self.p2Score.setText("0")
-
         self.gameState = GameState.TIMER
 
     # Simply move each player along as needed or update the timer depending
