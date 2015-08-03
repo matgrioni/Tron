@@ -30,7 +30,15 @@ class View(utils.EventHandler):
         self.size = size
 
         self.background = (255, 255, 255)
+        self.focusedBackground = (214, 214, 214)
+        self.curBackground = self.background
+
         self.visible = True
+        self.focused = True
+        self.focusable = True
+
+        self.addEventCallback((MOUSEBUTTONDOWN, None), self._handleClickDown)
+        self.addEventCallback((MOUSEBUTTONUP, None), self._handleClickUp)
 
     def reset(self):
         pass
@@ -42,7 +50,45 @@ class View(utils.EventHandler):
     def draw(self):
         if self.visible:
             bounds = (self.x, self.y, self.size[0], self.size[1])
-            pygame.draw.rect(self.screen, self.background, bounds)
+            pygame.draw.rect(self.screen, self.curBackground, bounds)
+
+    # Set if the view is able to be focused on.
+    def setFocusable(self, focusable):
+        self.focusable = focusable
+
+        # If not focusable then set it to not focused currently.
+        if not self.focusable:
+            self._setFocused(False)
+
+    def setPosition(self, pos):
+        self.x, self.y = pos[0], pos[1]
+
+    # Set the focused state of the view. If focused, then the view
+    def _setFocused(self, focused):
+        self.focused = focused
+        if self.focused:
+            self.curBackground = self.focusedBackground
+        else:
+            self.curBackground = self.background
+
+    # The default implementation for a down click is to check if it's within the
+    # bounds of this view. If so, this view is focused on.
+    def _handleClickDown(self, e):
+        # If the view is not visible it can not be focused on and then focus
+        # on it if the click event position is within the bound box of this
+        # view. Change the background color accordingly.
+        self._setFocused(self.visible and self.focusable \
+            and self._posInBounds(*e.pos))
+
+    # By default, if there is any up event then the element is not focused on
+    # anymore. It still may be selected.
+    def _handleClickUp(self, e):
+        self._setFocused(False)
+
+    # Returns True if the given position is within or on the bounds of this
+    def _posInBounds(self, x, y):
+        return (x > self.x and x < self.x + self.size[0]) and \
+            (y > self.y and y < self.y + self.size[1])
 
 ######################################################################
 # Author: Matias Grioni
@@ -55,6 +101,10 @@ class ViewGroup(View):
     def __init__(self, module, pos, size=(0, 0)):
         super(ViewGroup, self).__init__(module, pos, size)
         self.children = []
+
+        # Don't want view groups to be focusable, only the end children like
+        # TextDisps, InputBox, etc.
+        self.setFocusable(False)
 
     def handleEvent(self, e):
         super(ViewGroup, self).handleEvent(e)
@@ -132,15 +182,13 @@ class InputBox(TextDisp):
 # For now only a fullscreen menu is allowed. Module contains
 # all the menus that will be used in the program.
 ###########################################################
-class Menu(View):
+class Menu(ViewGroup):
     def __init__(self, module, pos, size):
         super(Menu, self).__init__(module, pos, size)
 
         # Initialize local variables for the menu
         self.selectedItem = 0
         self.optionCallbacks = {}
-
-        self.textdisps = []
 
         # Define the default keyboard events for menu navigation
         self.addEventCallback((KEYDOWN, K_UP), self._moveSelectedUp)
@@ -163,27 +211,27 @@ class Menu(View):
     # TextDisp views for the Menu and automatically displays them
     def setOptions(self, options):
         self.options = options
-        del self.textdisps[:]
+        del self.children[:]
         
         # For each text option provided create the TextDisp for them.
         for (i, option) in enumerate(options):
             # Accounts for variable heights
             if i == 0:
-                self.textdisps.append(TextDisp(self.module,
+                self.children.append(TextDisp(self.module,
                                       (self.x + 30, self.y), option))
             else:
                 # Set the next TextDisp 10 pixels below the prior one
-                prior = self.textdisps[i - 1]
+                prior = self.children[i - 1]
                 newY = prior.y + prior.size[1] + 10
 
-                self.textdisps.append(TextDisp(self.module,
+                self.children.append(TextDisp(self.module,
                                       (self.x + 30, newY), option))
 
     # Draw the text and the appropriate selector shape
     def draw(self):
         super(Menu, self).draw()
 
-        for (i, textdisp) in enumerate(self.textdisps):
+        for (i, textdisp) in enumerate(self.children):
             textdisp.draw()
 
             # Draw the triangle indicator

@@ -18,7 +18,7 @@ from pygame.locals import *
 #
 # Classes which need to handle events should inherit this class. This
 # stores the handlers, arguments as values and the event info as a key
-# in a dictionary. So when an event is passed through _handleEvent
+# in a dictionary. So when an event is passed through handleEvent
 # the necessary callback is used.
 ######################################################################
 class EventHandler(object):
