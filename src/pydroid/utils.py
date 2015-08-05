@@ -125,3 +125,4 @@ class Timer(object):
             pygame.time.delay(1000)
 
         self.onFinish()
+

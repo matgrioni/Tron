@@ -18,6 +18,23 @@ import utils
 import sys
 import string, re
 
+######################################################################
+# Author: Matias Grioni
+# Created: 8/4/15
+#
+# The different input modes for the module. The module can be either
+# in touch mode or keyboard mode.
+#
+# In touch mode, the user is using the the mouse to click and interact
+# with elements. Most elements are not focusable except a few such as
+# InputBox which need to hold focus to accept input.
+#
+# In keyboard mode, the user uses the keyboard to interact with the
+# views as necessary.
+######################################################################
+class InputMode(object):
+    TOUCH_MODE, KEY_MODE = range(2)
+
 ###########################################################
 # Author: Matias Grioni
 # Created: 6/2/15
@@ -43,10 +60,6 @@ import string, re
 # each other. The quit function will quit the entire game
 # when called and back will stop the current module and
 # therefore the prior module will resume execution.
-#
-# TODO: Implement an activity lifecycle, so that way when
-# transitioning between activities, there are always certain
-# methods which are called before the execution of a module.
 ###########################################################
 class Module(utils.EventHandler):
     def __init__(self, parent=None, fill=(255, 255, 255), size=(640, 480)):
@@ -61,9 +74,13 @@ class Module(utils.EventHandler):
             pygame.init()
             self.size = size
             self.screen = pygame.display.set_mode(size)
+            
+            # Start out each module in touch mode
+            self.mode = InputMode.TOUCH_MODE
         else:
             self.screen = parent.screen
             self.size = (self.screen.get_width(), self.screen.get_height())
+            self.mode = parent.mode
 
         self.parent = parent
         self.fill = fill
@@ -80,6 +97,9 @@ class Module(utils.EventHandler):
 
         self.addEventCallback((KEYDOWN, K_ESCAPE), self.back)
         self.addEventCallback((QUIT, None), self.quit)
+        self.addEventCallback((MOUSEBUTTONDOWN, None), self._handleClickDown)
+        self.addEventCallback((KEYDOWN, (K_TAB, K_UP, K_DOWN)),
+                              self._handleInputModeKeyChanger)
 
     def setView(self, view):
         self.view = view
@@ -106,9 +126,23 @@ class Module(utils.EventHandler):
         for e in pygame.event.get():
             self.handleEvent(e)
 
+            # If the module is in TOUCH_MODE, then the event is either a mouse
+            # event, or a keyboard event if the view is focusableInTouchMode.
+            # Either way, all events must be routed to the main event.
+            #
+            # If the module is in KEY_MODE, then the event is a keyboard event
+            # assuredly. If there is a view focused, then dispatch the event to
+            # it.TODO: Not really sure if this is redundant in any way. Just making
+            # sure.
+
             # Now once the module has handled all the events it needs to,
-            # continue passing the event through the view tree.
-            self.view.handleEvent(e)
+            # continue passing the event through the view tree. Assuming that
+            # the root view takes up the entire screen.
+            if self.mode == InputMode.TOUCH_MODE:
+                self.view.handleEvent(e)
+            elif self.mode == InputMode.KEY_MODE:
+                if self.view.focused:
+                    self.view.handleEvent(e)
 
     def update(self):
         if self.view is not None:
@@ -171,3 +205,24 @@ class Module(utils.EventHandler):
         self.running = False
         pygame.quit()
         sys.exit()
+
+    # If there is a click down, then the module automatically enters TOUCH_MODE
+    # The event would then be dispatched to the root view for this module.
+    # If there is a view that is currently focused on, then that view is
+    # unfocused.
+    def _handleClickDown(self, e):
+        # Any views that had focus in KEY_MODE should lose focus.
+        if self.mode == InputMode.KEY_MODE:
+            if self.view.focused:
+                self.view.setFocused(False)
+
+        self.mode = InputMode.TOUCH_MODE
+
+    # If there is a keydown event for the up or down arrows, or the
+    # tab key, then we enter KEY_MODE, but only if there are no views
+    # that are focused (they would be focusableInTouchMode).
+    def _handleInputModeKeyChanger(self, e):
+        if self.mode == InputMode.TOUCH_MODE:
+            if self.view.focused:
+                self.mode = InputMode.KEY_MODE
+                self.view.setFocused(False)

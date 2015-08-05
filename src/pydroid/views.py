@@ -11,6 +11,7 @@ import pygame
 from pygame.locals import *
 
 import utils
+from modules import InputMode
 
 ######################################################################
 # Author: Matias Grioni
@@ -30,12 +31,12 @@ class View(utils.EventHandler):
         self.size = size
 
         self.background = (255, 255, 255)
-        self.focusedBackground = (214, 214, 214)
         self.curBackground = self.background
 
         self.visible = True
         self.focused = True
         self.focusable = True
+        self.focusableInTouchMode = False
 
         self.addEventCallback((MOUSEBUTTONDOWN, None), self._handleClickDown)
         self.addEventCallback((MOUSEBUTTONUP, None), self._handleClickUp)
@@ -58,18 +59,23 @@ class View(utils.EventHandler):
 
         # If not focusable then set it to not focused currently.
         if not self.focusable:
-            self._setFocused(False)
+            self.setFocused(False)
+
+    # Set if the view is able to be focused on in touch mode.
+    def setFocusableInTouchMode(self, focusableInTouchMode):
+        self.focusableInTouchMode = focusableInTouchMode
 
     def setPosition(self, pos):
         self.x, self.y = pos[0], pos[1]
 
     # Set the focused state of the view. If focused, then the view
-    def _setFocused(self, focused):
+    def setFocused(self, focused):
         self.focused = focused
-        if self.focused:
-            self.curBackground = self.focusedBackground
-        else:
-            self.curBackground = self.background
+
+    # Returns True if the given position is within or on the bounds of this
+    def posInBounds(self, x, y):
+        return (x > self.x and x < self.x + self.size[0]) and \
+            (y > self.y and y < self.y + self.size[1])
 
     # The default implementation for a down click is to check if it's within the
     # bounds of this view. If so, this view is focused on.
@@ -77,18 +83,12 @@ class View(utils.EventHandler):
         # If the view is not visible it can not be focused on and then focus
         # on it if the click event position is within the bound box of this
         # view. Change the background color accordingly.
-        self._setFocused(self.visible and self.focusable \
-            and self._posInBounds(*e.pos))
+        self.setFocused(self.visible and self.focusable)
 
     # By default, if there is any up event then the element is not focused on
     # anymore. It still may be selected.
     def _handleClickUp(self, e):
-        self._setFocused(False)
-
-    # Returns True if the given position is within or on the bounds of this
-    def _posInBounds(self, x, y):
-        return (x > self.x and x < self.x + self.size[0]) and \
-            (y > self.y and y < self.y + self.size[1])
+        self.setFocused(False)
 
 ######################################################################
 # Author: Matias Grioni
@@ -102,15 +102,42 @@ class ViewGroup(View):
         super(ViewGroup, self).__init__(module, pos, size)
         self.children = []
 
-        # Don't want view groups to be focusable, only the end children like
-        # TextDisps, InputBox, etc.
-        self.setFocusable(False)
-
+    # Handles the main coordination of events and focus. This is designed like
+    # this since the module only has one view per definition. Secondly, a view
+    # 
     def handleEvent(self, e):
         super(ViewGroup, self).handleEvent(e)
+        
+        # If the input mode is in TOUCH_MODE, the event could be either a key
+        # event or a touch event.
+        #
+        # If it is a touch event, then the child loses
+        # focus when it is outside its bounds. If it is inside the bounds a
+        # given child, then the event is passed to it.
+        #
+        # If it is a key event, then pass the event to any currently focused
+        # views.
+        if self.module.mode == InputMode.TOUCH_MODE:
+            if e.type in (MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION):
+                # Check for all children if the event is within its bounds,
+                # and pass the event to the child if so. Otherwise, that child
+                # loses any focus it had.
+                for child in self.children:
+                    if child.posInBounds(*e.pos):
+                        child.handleEvent(e)
+                    else:
+                        child.setFocused(False)
 
-        for child in self.children:
-            child.handleEvent(e)
+            elif e.type in (KEYUP, KEYDOWN):
+                # Check if any children have focus, then if there is a child
+                # with focus then send the event to that child.
+                focus = [child for child in self.children if child.focused]
+                if len(focus) > 0:
+                    focus = focus[0]
+                    focus.handleEvent(e)
+        elif self.module.mode == InputMode.KEY_MODE:
+            if self.view.focused:
+                self.view.handleEvent(e)
 
     def update(self):
         for child in self.children:
@@ -121,14 +148,25 @@ class ViewGroup(View):
         for child in self.children:
             child.draw()
         
+    # Recursively sets the focus of this view group. If this view is
+    # not focused, then by definition, any child views can not be
+    # focused.
+    def setFocused(self, focused):
+        super(ViewGroup, self).setFocused(focused)
 
-###########################################################
+        # If this is not focused then none of its children should be.
+        if not focused:
+            focus = [child for child in self.children if child.focused]
+            if len(focus) > 0:
+                focus[0].setFocused(focused)
+
+######################################################################
 # Author: Matias Grioni
 # Created: 6/21/15
 #
-# Widget to display any arbitrary text in position (x, y)
-# on a pygame surface with customizable font.
-###########################################################
+# Widget to display any arbitrary text in position (x, y) on a pygame
+# surface with customizable font.
+######################################################################
 class TextDisp(View):
     # Creates a TextDisp at the provided coordinates displaying provided text.
     # The font is monospace, size 20, and black by default
@@ -137,6 +175,8 @@ class TextDisp(View):
 
         self.setFont("monospace", 20, (0, 0, 0))
         self.setText(text)
+
+        self.focusedBackground = (214, 214, 214)
 
     # Sets the font of this TextDisp. Any omitted parameter is not affected.
     def setFont(self, font=None, fontsize=None, color=None):
