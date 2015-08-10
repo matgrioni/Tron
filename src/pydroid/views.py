@@ -11,7 +11,8 @@ import pygame
 from pygame.locals import *
 
 import utils
-from modules import InputMode
+
+from types import NoneType
 
 ######################################################################
 # Author: Matias Grioni
@@ -26,6 +27,7 @@ class View(utils.EventHandler):
         super(View, self).__init__()
         self.module = module
         self.screen = module.screen
+        self.parent = None
 
         self.x, self.y = pos[0], pos[1]
         self.size = size
@@ -33,10 +35,12 @@ class View(utils.EventHandler):
         self.background = (255, 255, 255)
         self.curBackground = self.background
 
-        self.visible = True
-        self.focused = True
+        self.focused = False
         self.focusable = True
         self.focusableInTouchMode = False
+
+        self.pressed = False
+        self.pressable = True
 
         self.addEventCallback((MOUSEBUTTONDOWN, None), self._handleClickDown)
         self.addEventCallback((MOUSEBUTTONUP, None), self._handleClickUp)
@@ -49,9 +53,17 @@ class View(utils.EventHandler):
 
     # Handles basic drawing behavior such as background color
     def draw(self):
-        if self.visible:
-            bounds = (self.x, self.y, self.size[0], self.size[1])
-            pygame.draw.rect(self.screen, self.curBackground, bounds)
+        bounds = (self.x, self.y, self.size[0], self.size[1])
+        pygame.draw.rect(self.screen, self.curBackground, bounds)
+
+    def setPosition(self, pos):
+        self.x, self.y = pos[0], pos[1]
+
+    # Returns True if the given position is within or on the bounds of this
+    # view. Bounds for checking are not inclusive.
+    def posInBounds(self, x, y):
+        return (x > self.x and x < self.x + self.size[0]) and \
+            (y > self.y and y < self.y + self.size[1])
 
     # Set if the view is able to be focused on.
     def setFocusable(self, focusable):
@@ -59,23 +71,47 @@ class View(utils.EventHandler):
 
         # If not focusable then set it to not focused currently.
         if not self.focusable:
-            self.setFocused(False)
+            self.clearFocus()
 
     # Set if the view is able to be focused on in touch mode.
     def setFocusableInTouchMode(self, focusableInTouchMode):
         self.focusableInTouchMode = focusableInTouchMode
 
-    def setPosition(self, pos):
-        self.x, self.y = pos[0], pos[1]
+    # Focuses this view if it is focusable and updates the focused index
+    # member in the parent, to match the position of this child view.
+    def requestFocus(self):
+        if self.focusable:
+            if isinstance(self.parent, ViewGroup):
+                self.parent._updateFocus(self)
 
-    # Set the focused state of the view. If focused, then the view
-    def setFocused(self, focused):
-        self.focused = focused
+            self.focused = True
 
-    # Returns True if the given position is within or on the bounds of this
-    def posInBounds(self, x, y):
-        return (x > self.x and x < self.x + self.size[0]) and \
-            (y > self.y and y < self.y + self.size[1])
+    # Removes focus from this view if it had any and updates the focused index
+    # member variable in the parent to signify no views are focused.
+    def clearFocus(self):
+        if self.focused:
+            if isinstance(self.parent, ViewGroup):
+                self.parent._clearChildFocus()
+
+            self.focused = False
+
+    # Set if this view is pressable. If False is passed in, then the view's
+    # pressed state is set to False.
+    def setPressable(self, pressable):
+        self.pressable = pressable
+
+        if not self.pressable:
+            self.pressed = False
+
+    # Set if the current view is pressed or not
+    def setPressed(self, pressed):
+        if self.pressable:
+            self.pressed = pressed
+
+            if self.pressed:
+                self.curBackground = self.pressedBackground
+            else:
+                self.curBackground = self.background
 
     # The default implementation for a down click is to check if it's within the
     # bounds of this view. If so, this view is focused on.
@@ -83,63 +119,59 @@ class View(utils.EventHandler):
         # If the view is not visible it can not be focused on and then focus
         # on it if the click event position is within the bound box of this
         # view. Change the background color accordingly.
-        self.setFocused(self.visible and self.focusable)
+        self.pressed = self.setPressed(True)
 
-    # By default, if there is any up event then the element is not focused on
-    # anymore. It still may be selected.
+        # If this view is clicked and it's focusable in TOUCH_MODE, then it
+        # is focused on now.
+        if self.focusableInTouchMode:
+            self.requestFocus()
+
+    # If the view has a click up event it can not be pressed. It can still
+    # be focused however if the view was focusableInTouchMode. A click up
+    # on the view would not change the focus state. Only clicking down
+    # outside the view would do that.
     def _handleClickUp(self, e):
-        self.setFocused(False)
+        self.setPressed(False)
 
-######################################################################
+################################################################################
 # Author: Matias Grioni
 # Created: 7/14/15
 #
-# A container for multiple different views. Add views by accessing
-# the children member variable, and calling .append()
-######################################################################
+# A container for multiple different views. Add views by accessing the children
+# member variable and calling .append()
+################################################################################
 class ViewGroup(View):
     def __init__(self, module, pos, size=(0, 0)):
         super(ViewGroup, self).__init__(module, pos, size)
         self.children = []
 
-    # Handles the main coordination of events and focus. This is designed like
-    # this since the module only has one view per definition. Secondly, a view
-    # 
-    def handleEvent(self, e):
-        super(ViewGroup, self).handleEvent(e)
-        
-        # If the input mode is in TOUCH_MODE, the event could be either a key
-        # event or a touch event.
-        #
-        # If it is a touch event, then the child loses
-        # focus when it is outside its bounds. If it is inside the bounds a
-        # given child, then the event is passed to it.
-        #
-        # If it is a key event, then pass the event to any currently focused
-        # views.
-        if self.module.mode == InputMode.TOUCH_MODE:
-            if e.type in (MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION):
-                # Check for all children if the event is within its bounds,
-                # and pass the event to the child if so. Otherwise, that child
-                # loses any focus it had.
-                for child in self.children:
-                    if child.posInBounds(*e.pos):
-                        child.handleEvent(e)
-                    else:
-                        child.setFocused(False)
+        self._focusedIndex = -1
 
-            elif e.type in (KEYUP, KEYDOWN):
-                # Check if any children have focus, then if there is a child
-                # with focus then send the event to that child.
-                focus = [child for child in self.children if child.focused]
-                if len(focus) > 0:
-                    focus = focus[0]
-                    focus.handleEvent(e)
-        elif self.module.mode == InputMode.KEY_MODE:
-            if self.view.focused:
-                self.view.handleEvent(e)
+        # ViewGroups are not focusable or clickable by default. They are to
+        # house other views and organize them.
+        self.setFocusable(False)
+        self.setPressable(False)
+
+    def handleEvent(self, e):
+        if e.type in (KEYUP, KEYDOWN):
+            # If this current ViewGroup is focused, then this won't return True
+            # and the event will still be sent to the event handlers for this
+            # ViewGroup.
+            if self._focusedIndex != -1:
+                nextChild = self._getFocusedNext()
+                if nextChild is not None:
+                    nextChild.handleEvent(e)
+        elif e.type in (MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION):
+            for child in self.children:
+                if child.posInBounds(*e.pos):
+                    child.handleEvent(e)
+                else:
+                    child.clearFocus()
+ 
+        super(ViewGroup, self).handleEvent(e)
 
     def update(self):
+        super(ViewGroup, self).update()
         for child in self.children:
             child.update()
 
@@ -147,18 +179,103 @@ class ViewGroup(View):
         super(ViewGroup, self).draw()
         for child in self.children:
             child.draw()
-        
-    # Recursively sets the focus of this view group. If this view is
-    # not focused, then by definition, any child views can not be
-    # focused.
-    def setFocused(self, focused):
-        super(ViewGroup, self).setFocused(focused)
 
-        # If this is not focused then none of its children should be.
-        if not focused:
-            focus = [child for child in self.children if child.focused]
-            if len(focus) > 0:
-                focus[0].setFocused(focused)
+    def addChild(self, child):
+        child.parent = self
+        self.children.append(child)
+
+    # Returns the child of this ViewGroup that is focused. If no view is focused
+    # then None is returned.
+    def getFocusedChild(self):
+        focus = None
+
+        if self._focusedIndex != -1:
+            child = self.children[self._focusedIndex]
+
+            if isinstance(child, ViewGroup):
+                focus = child.getFocusedChild()
+            elif isinstance(child, View):
+                focus = child
+
+        return focus
+
+    def _getFocusedNext(self):
+        focus = None
+
+        for child in self.children:
+            if not focus:
+                if child.focused:
+                    focus = child
+                elif isinstance(child, ViewGroup):
+                    focus = child._getFocusedNext()
+
+        return focus
+
+    def _clearChildFocus(self):
+        self._focusedIndex = -1
+
+        if isinstance(self.parent, ViewGroup):
+            self.parent._clearChildFocus()
+
+    # TODO: Document this.
+    # NOTE: Deprecated
+    """
+    def _focusNext(self):
+        if self._focusedIndex < 0:
+            self._focusedIndex = 0
+
+        curChild = self.children[self._focusedIndex]
+        nextChildFocused = False
+        if not curChild.focused:
+            if curChild.focusable:
+                curChild.requestFocus()
+                nextChildFocused = True
+
+        if not nextChildFocused:
+            if isinstance(curChild, ViewGroup):
+                nextFocusIndex = curChild._focusNext()
+                if nextFocusIndex >= 0:
+                    nextChildFocused = True
+
+        if not nextChildFocused:
+            for (i, child) in enumerate(self.children[self._focusedIndex + 1:]):
+                self.children[self._focusedIndex].clearFocus()
+                child = self.children[i + self._focusedIndex + 1]
+
+                if child.focusable:
+                    child.requestFocus()
+                    self._focusedIndex += i + 1
+                    nextChildFocused = True
+                    break
+
+        if not nextChildFocused:
+            self.children[self._focusedIndex].clearFocus()
+            self._focusedIndex = -1
+
+        return self._focusedIndex
+    """
+
+    def _updateFocus(self, child):
+        focus = self._findFocus()
+        if focus is not None:
+            focus.clearFocus()
+
+        self._focusedIndex = self.children.index(child)
+        
+        if isinstance(self.parent, ViewGroup):
+            self.parent._updateFocus(self)
+
+    def _findFocus(self):
+        focus = None
+
+        for child in self.children:
+            if not focus:
+                if child.focused:
+                    focus = child
+                elif isinstance(child, ViewGroup):
+                    focus = child._findFocus()
+
+        return focus   
 
 ######################################################################
 # Author: Matias Grioni
@@ -175,8 +292,6 @@ class TextDisp(View):
 
         self.setFont("monospace", 20, (0, 0, 0))
         self.setText(text)
-
-        self.focusedBackground = (214, 214, 214)
 
     # Sets the font of this TextDisp. Any omitted parameter is not affected.
     def setFont(self, font=None, fontsize=None, color=None):
@@ -225,15 +340,7 @@ class InputBox(TextDisp):
 class Menu(ViewGroup):
     def __init__(self, module, pos, size):
         super(Menu, self).__init__(module, pos, size)
-
-        # Initialize local variables for the menu
-        self.selectedItem = 0
-        self.optionCallbacks = {}
-
-        # Define the default keyboard events for menu navigation
-        self.addEventCallback((KEYDOWN, K_UP), self._moveSelectedUp)
-        self.addEventCallback((KEYDOWN, K_DOWN), self._moveSelectedDown)
-        self.addEventCallback((KEYDOWN, K_RETURN), self._selectItem)
+        self.options = []
 
     # Option callbacks are called when the user selects an
     # option from the menu with the enter key. Provide
@@ -241,11 +348,18 @@ class Menu(ViewGroup):
     # item is selected. Provide any parameters to the
     # callback through the optional args argument
     def addOptionCallback(self, option, callback, *args, **kwargs):
-        self.optionCallbacks[option] = (callback, args, kwargs)
+        if option in self.options:
+            index = self.options.index(option)
+            self.children[index].addEventCallback((KEYDOWN, K_RETURN),
+                                                  callback, *args, **kwargs)
+            self.children[index].addEventCallback((MOUSEBUTTONDOWN, 1), callback, *args, **kwargs)
 
-    # Remove the current 
+    # Remove the current callback for the option provided. Returns the callback
+    # tuple object.
     def removeOptionCallback(self, option):
-        return self.optionsCallback(option, None)
+        if option in self.options:
+            index = self.options.index(option)
+            return self.children[index].removeEventCallback((KEYDOWN, K_RETURN))
 
     # Automatically sets the internal option values and creates the
     # TextDisp views for the Menu and automatically displays them
@@ -255,17 +369,16 @@ class Menu(ViewGroup):
         
         # For each text option provided create the TextDisp for them.
         for (i, option) in enumerate(options):
-            # Accounts for variable heights
+            # Accounts for variable heights in the menu items.
             if i == 0:
-                self.children.append(TextDisp(self.module,
-                                      (self.x + 30, self.y), option))
+                menuItem = TextDisp(self.module, (self.x + 30, self.y), option)
             else:
                 # Set the next TextDisp 10 pixels below the prior one
                 prior = self.children[i - 1]
                 newY = prior.y + prior.size[1] + 10
+                menuItem = TextDisp(self.module, (self.x + 30, newY), option)
 
-                self.children.append(TextDisp(self.module,
-                                      (self.x + 30, newY), option))
+            self.children.append(menuItem)
 
     # Draw the text and the appropriate selector shape
     def draw(self):
@@ -275,32 +388,10 @@ class Menu(ViewGroup):
             textdisp.draw()
 
             # Draw the triangle indicator
-            if i == self.selectedItem:
+            if i == self._focusedIndex:
                 sidePoint = (self.x + 20, textdisp.y + textdisp.size[1] / 2)
                 topPoint = (sidePoint[0] - 10, sidePoint[1] - 5)
                 botPoint = (sidePoint[0] - 10, sidePoint[1] + 5)
 
                 pygame.draw.polygon(self.screen, (0, 0, 0),
                                     [sidePoint, topPoint, botPoint])
-
-    # Changes the selected item to one higher if possible
-    def _moveSelectedUp(self, event):
-        if self.selectedItem > 0:
-            self.selectedItem -= 1
-
-    # Changes the selected item to one lower if possible
-    def _moveSelectedDown(self, event):
-        if self.selectedItem < len(self.options) - 1:
-            self.selectedItem += 1
-
-    # Selects the current item that is selected and executes
-    # that defined callback.
-    def _selectItem(self, event):
-        option = self.options[self.selectedItem]
-
-        if option in self.optionCallbacks:
-            callback = self.optionCallbacks[option][0]
-            args = self.optionCallbacks[option][1]
-            kwargs = self.optionCallbacks[option][2]
-
-            callback(*args, **kwargs)

@@ -43,10 +43,12 @@ class GameView(views.ViewGroup):
         # Make the game fullscreen
         super(GameView, self).__init__(module, (0, 0), module.size)
 
+        self.setFocusable(True)
+
         self._initPlayers()
         self._initEventCallbacks()
 
-        # Start the game by displaying a timer, which is created right below.
+        # Start the Game off with a countdown timer.
         self.gameState = GameState.TIMER
 
         self.timer = utils.Timer(3)
@@ -59,9 +61,10 @@ class GameView(views.ViewGroup):
         self.timerDisp = views.TextDisp(module,
                                        (self.size[0] / 2, self.size[1] / 2))
 
-        self.children.append(self.p1Score)
-        self.children.append(self.p2Score)
-        self.children.append(self.timerDisp)
+        # Add them to this container
+        self.addChild(self.p1Score)
+        self.addChild(self.p2Score)
+        self.addChild(self.timerDisp)
 
     # Setup the players with the saved colors and also setup the views that
     # display the appropriate scores in the corner.
@@ -107,6 +110,7 @@ class GameView(views.ViewGroup):
         if self.gameState == GameState.TIMER:
             self.timer.start()
             self.gameState = GameState.PLAYING
+            self.requestFocus()
         elif self.gameState == GameState.PLAYING:
             self.p1.update()
             self.p2.update()
@@ -179,6 +183,8 @@ class GameView(views.ViewGroup):
             self.p2.turnRight()
         elif event.key == K_a:
             self.p2.turnLeft()
+
+        self.p2.turnable = False
 
     def _p2DirKeyup(self, event):
         self.p2.turnable = True

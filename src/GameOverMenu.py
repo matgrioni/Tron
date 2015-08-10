@@ -21,9 +21,9 @@ class GameOverMenu(modules.Module):
         # Then create the container for them, set this container as the
         # view of this module.
         container = views.ViewGroup(self, (0, 0), self.size)
-        container.children.append(self.menu)
-        container.children.append(self.p1Score)
-        container.children.append(self.p2Score)
+        container.addChild(self.menu)
+        container.addChild(self.p1Score)
+        container.addChild(self.p2Score)
 
         self.setView(container)
 

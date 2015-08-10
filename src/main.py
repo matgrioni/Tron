@@ -29,7 +29,6 @@ class MainMenu(modules.Module):
         self.menu.setOptions(["Local", "Network", "Settings", "Quit"])
 
         self.menu.addOptionCallback("Local", self._startGame)
-        # self.addOptionCallback("Settings", self._settingsMenu)
         self.menu.addOptionCallback("Quit", self.quit)
 
         self.setView(self.menu)
@@ -45,11 +44,11 @@ class MainMenu(modules.Module):
         self.fill = tuple(fillChannels)
         self.color = tuple(fontChannels)
 
-    def _startGame(self):
+    def _startGame(self, e=None):
         g = GameModule(self)
         g.execute()
 
-    def _settingsMenu(self):
+    def _settingsMenu(self, e=None):
         settings = SettingsMenu(self)
         settings.execute()
 

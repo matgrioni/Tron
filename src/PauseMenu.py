@@ -19,9 +19,9 @@ class PauseMenu(modules.Module):
 
         # Now add the children view to a viewgroup container
         container = views.ViewGroup(self, (0, 0), self.size)
-        container.children.append(self.menu)
-        container.children.append(self.p1Score)
-        container.children.append(self.p2Score)
+        container.addChild(self.menu)
+        container.addChild(self.p1Score)
+        container.addChild(self.p2Score)
 
         self.setView(container)
 

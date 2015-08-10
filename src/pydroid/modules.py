@@ -1,14 +1,13 @@
 #!/usr/bin/python
 
-###########################################################
+################################################################################
 # Author: Matias Grioni
 # Created: 6/14/15
 #
-# Module that contains all the widgets for the program.
-# The idea is that for all the necessary views, inputs,
-# displays and screens of the program. Some widget can be
-# extended and used.
-###########################################################
+# Module that contains all the widgets for the program. The idea is that for all
+# the necessary views, inputs, displays and screens of the program. Some widget
+# can be extended and used.
+################################################################################
 
 import pygame
 from pygame.locals import *
@@ -18,49 +17,32 @@ import utils
 import sys
 import string, re
 
-######################################################################
-# Author: Matias Grioni
-# Created: 8/4/15
-#
-# The different input modes for the module. The module can be either
-# in touch mode or keyboard mode.
-#
-# In touch mode, the user is using the the mouse to click and interact
-# with elements. Most elements are not focusable except a few such as
-# InputBox which need to hold focus to accept input.
-#
-# In keyboard mode, the user uses the keyboard to interact with the
-# views as necessary.
-######################################################################
-class InputMode(object):
-    TOUCH_MODE, KEY_MODE = range(2)
+import utils
+import views
 
-###########################################################
+################################################################################
 # Author: Matias Grioni
 # Created: 6/2/15
 #
-# A base class for the pygame logic units. Allows an oop
-# design and for modularization of the logic rather than
-# procedural design in a large while loop.
+# A base class for the pygame logic units. Allows an oop design and for
+# modularization of the logic rather than procedural design in a large while
+# loop.
 #
-# Extend this class and then set the view you want to pouplate
-# this module with. Parallel is to setContentView in Android.
+# Extend this class and then set the view you want to pouplate this module with.
+# Parallel is to setContentView in Android.
 #
-# This class is inspired from phyces original code for
-# PygameHelper. The one major difference is that the
-# original used the function handleEvents with if blocks
-# to check for all the current events. This implementation
-# defines callbacks and the events for which these callbacks
-# are used.
+# This class is inspired from phyces original code for PygameHelper. The one
+# major difference is that the original used the function handleEvents with if
+# blocks to check for all the current events. This implementation defines
+# callbacks and the events for which these callbacks are used.
 #
-# This gives the user more ability to control what and when
-# is being called for the events.
+# This gives the user more ability to control what and when is being called for
+# the events.
 #
-# This code also has the ability to stack modules on top of
-# each other. The quit function will quit the entire game
-# when called and back will stop the current module and
-# therefore the prior module will resume execution.
-###########################################################
+# This code also has the ability to stack modules on top of each other. The quit
+# function will quit the entire game when called and back will stop the current
+# module and therefore the prior module will resume execution.
+################################################################################
 class Module(utils.EventHandler):
     def __init__(self, parent=None, fill=(255, 255, 255), size=(640, 480)):
         # This is only included so that when widget classes that extend this
@@ -74,35 +56,25 @@ class Module(utils.EventHandler):
             pygame.init()
             self.size = size
             self.screen = pygame.display.set_mode(size)
-            
-            # Start out each module in touch mode
-            self.mode = InputMode.TOUCH_MODE
         else:
             self.screen = parent.screen
             self.size = (self.screen.get_width(), self.screen.get_height())
-            self.mode = parent.mode
 
         self.parent = parent
         self.fill = fill
+
+        self.view = RootView(self)
 
         self.running = False
         self.clock = pygame.time.Clock()
         self.fps = 60
 
-        # Create the dictionaries that bind an event to a user
-        # defined callback. Each event has one possible callback
-        # and if a callback is assigned to an event code which is
-        # already assigned then the new will overwrite the old.
-        self.eventCallbacks = {}
-
+        # Setup the event handlers for the module
         self.addEventCallback((KEYDOWN, K_ESCAPE), self.back)
         self.addEventCallback((QUIT, None), self.quit)
-        self.addEventCallback((MOUSEBUTTONDOWN, None), self._handleClickDown)
-        self.addEventCallback((KEYDOWN, (K_TAB, K_UP, K_DOWN)),
-                              self._handleInputModeKeyChanger)
 
-    def setView(self, view):
-        self.view = view
+    def setView(self, child):
+        self.view.addChild(child)
 
     def title(self, s):
         pygame.display.set_caption(s)
@@ -122,37 +94,25 @@ class Module(utils.EventHandler):
     # all events through the view hierarchy, so that any child views,
     # grandchildren, etc, can have event listeners that will be reached.
     def handleEvents(self):
-        # Simply handle all the event callbacks assigned to this activity.
+        # The origination of all events which bubble up through the view
+        # hierarchy. The events are first passed to the root view before
+        # the handler for this module handles it. ViewGroups do the same with
+        # their children. This way the event is first handled by the terminal
+        # views and then bubbles up the view hierarchy.
+        #
+        # This also allows for the flags that are returned by event handlers
+        # to stop the propagation of the event.
         for e in pygame.event.get():
+            self.view.handleEvent(e)
             self.handleEvent(e)
 
-            # If the module is in TOUCH_MODE, then the event is either a mouse
-            # event, or a keyboard event if the view is focusableInTouchMode.
-            # Either way, all events must be routed to the main event.
-            #
-            # If the module is in KEY_MODE, then the event is a keyboard event
-            # assuredly. If there is a view focused, then dispatch the event to
-            # it.TODO: Not really sure if this is redundant in any way. Just making
-            # sure.
-
-            # Now once the module has handled all the events it needs to,
-            # continue passing the event through the view tree. Assuming that
-            # the root view takes up the entire screen.
-            if self.mode == InputMode.TOUCH_MODE:
-                self.view.handleEvent(e)
-            elif self.mode == InputMode.KEY_MODE:
-                if self.view.focused:
-                    self.view.handleEvent(e)
-
     def update(self):
-        if self.view is not None:
-            self.view.update()
+        self.view.update()
     
     def draw(self):
-        if self.view is not None:
-            self.view.draw()
+        self.view.draw()
 
-    # Runs the current game definition in this instance of PygameHelper.
+    # Runs the logic loop for this module.
     def execute(self):
         self.running = True
 
@@ -206,23 +166,42 @@ class Module(utils.EventHandler):
         pygame.quit()
         sys.exit()
 
-    # If there is a click down, then the module automatically enters TOUCH_MODE
-    # The event would then be dispatched to the root view for this module.
-    # If there is a view that is currently focused on, then that view is
-    # unfocused.
-    def _handleClickDown(self, e):
-        # Any views that had focus in KEY_MODE should lose focus.
-        if self.mode == InputMode.KEY_MODE:
-            if self.view.focused:
-                self.view.setFocused(False)
+    def getFocusedView(self):
+        return self.view.getFocusedChild()
 
-        self.mode = InputMode.TOUCH_MODE
+################################################################################
+# Author: Matias Grioni
+# Created: 8/5/15
+#
+# The root view for modules. This class is merely a ViewGroup that acts as a
+# container for a user defined layout. It fills up the entire window that is
+# being used. It's main use is to give a consistent base view for the module.
+################################################################################
+class RootView(views.ViewGroup):
+    # Construct this RootView.
+    # The size and position of this view are determined by the module passed in.
+    # The RootView goes from (0, 0) and is as big as the screen.
+    def __init__(self, module):
+        super(RootView, self).__init__(module, (0, 0), module.size)
+        
+        self.addEventCallback((MOUSEBUTTONDOWN, None), self._touchMode)
 
-    # If there is a keydown event for the up or down arrows, or the
-    # tab key, then we enter KEY_MODE, but only if there are no views
-    # that are focused (they would be focusableInTouchMode).
-    def _handleInputModeKeyChanger(self, e):
-        if self.mode == InputMode.TOUCH_MODE:
-            if self.view.focused:
-                self.mode = InputMode.KEY_MODE
-                self.view.setFocused(False)
+    # If there is a click down, any focused view is unfocused and the module
+    # enters TOUCH_MODE.
+    def _touchMode(self, e): 
+        # If the sole child of the root view, is focused then make it unfocused
+        # and move on. Only one view can be focused on and we found it.
+        #
+        # Otherwise check if the child is a ViewGroup, and if so, check if any
+        # of its children are focused. If so, dive in to unfocus it.
+        #
+        # If this view is not focused, and it's not a ViewGroup with a child
+        # that is focused on, then there are no elements that are focused
+        # and we can move on.
+        child = self.children[0]
+
+        # If the child is a ViewGroup instance, then check if is focused
+        if isinstance(child, views.ViewGroup):
+            focus = child.getFocusedChild()
+            if focus is not None:
+                focus.clearFocus()
